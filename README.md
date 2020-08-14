@@ -87,7 +87,7 @@ final List<int> data = await medium.getThumbnail();
 ```dart
 final List<int> data = await PhotoGallery.getThumbnail(mediumId: mediumId);
 ```
-You can also specify thumbnail width and height on Android API 21 or higher; You can also specify thumbnail width, height and whether provider high quality or not on iOS:
+You can also specify thumbnail width and height on Android API 29 or higher; You can also specify thumbnail width, height and whether provider high quality or not on iOS:
 ```dart
 final List<int> data = await medium.getThumbnail(
     width: 128,
@@ -110,7 +110,7 @@ final List<int> data = await album.getThumbnail();
 ```dart
 final List<int> data = await PhotoGallery.getAlbumThumbnail(albumId: albumId);
 ```
-You can also specify thumbnail width and height on Android API 21 or higher; You can also specify thumbnail width, height and whether provider high quality or not on iOS:
+You can also specify thumbnail width and height on Android API 29 or higher; You can also specify thumbnail width, height and whether provider high quality or not on iOS:
 ```dart
 final List<int> data = await album.getThumbnail(
     width: 128,
@@ -158,7 +158,7 @@ FadeInImage(
     ),
 )
 ```
-Width and height is only available on Android API 21+ or iOS platform
+Width and height is only available on Android API 21+ or iOS platform. High quality is only available on iOS platform.
 * Displaying a full size image
 
 You can use PhotoProvider to display the full size image (here with the help of dependency [transparent_image](https://pub.dev/packages/transparent_image)):
