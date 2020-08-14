@@ -1,0 +1,51 @@
+part of photogallery;
+
+/// Fetches the given image from the gallery.
+class PhotoProvider extends ImageProvider<PhotoProvider> {
+  PhotoProvider({
+    @required this.mediumId,
+  }) : assert(mediumId != null);
+
+  final String mediumId;
+
+  @override
+  ImageStreamCompleter load(key, decode) {
+    return MultiFrameImageStreamCompleter(
+      codec: _loadAsync(key, decode),
+      scale: 1.0,
+      informationCollector: () sync* {
+        yield ErrorDescription('Id: $mediumId');
+      },
+    );
+  }
+
+  Future<ui.Codec> _loadAsync(PhotoProvider key, DecoderCallback decode) async {
+    assert(key == this);
+    final file = await PhotoGallery.getFile(
+        mediumId: mediumId, mediumType: MediumType.image);
+    if (file == null) return null;
+
+    final bytes = await file.readAsBytes();
+    if (bytes.lengthInBytes == 0) return null;
+
+    return await decode(bytes);
+  }
+
+  @override
+  Future<PhotoProvider> obtainKey(ImageConfiguration configuration) {
+    return SynchronousFuture<PhotoProvider>(this);
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != runtimeType) return false;
+    final PhotoProvider typedOther = other;
+    return mediumId == typedOther.mediumId;
+  }
+
+  @override
+  int get hashCode => mediumId?.hashCode ?? 0;
+
+  @override
+  String toString() => '$runtimeType("$mediumId")';
+}
