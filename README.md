@@ -1,5 +1,7 @@
 # Photo Gallery
 
+[![pub package](https://img.shields.io/pub/v/photo_gallery.svg)](https://pub.dev/packages/photo_gallery)
+
 A Flutter plugin that retrieves images and videos from mobile native gallery.
 
 ## Installation
