@@ -158,7 +158,7 @@ FadeInImage(
     ),
 )
 ```
-Width and height is only available on Android API 21+ or iOS platform. High quality is only available on iOS platform.
+Width and height is only available on Android API 29+ or iOS platform. High quality is only available on iOS platform.
 * Displaying a full size image
 
 You can use PhotoProvider to display the full size image (here with the help of dependency [transparent_image](https://pub.dev/packages/transparent_image)):
