@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:transparent_image/transparent_image.dart';
 
 part 'src/common/medium_type.dart';
 part 'src/image_providers/album_thumbnail_provider.dart';

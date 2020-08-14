@@ -34,8 +34,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
       width: width,
       highQuality: highQuality,
     );
-    if (bytes == null || bytes.length == 0)
-      return await decode(kTransparentImage);
+    if (bytes == null || bytes.length == 0) return null;
 
     return await decode(bytes);
   }
