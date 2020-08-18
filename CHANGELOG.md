@@ -1,3 +1,7 @@
+## 0.2.1-beta
+
+Add video duration attribute in Medium
+
 ## 0.2.0+1
 
 Release 0.2.0+1
