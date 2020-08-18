@@ -11,13 +11,13 @@ Future<dynamic> mockMethodCallHandler(MethodCall call) async {
         Generator.generateCollectionsJson(mediumType: mediumType);
     return collections;
   } else if (call.method == "listMedia") {
-    String collectionId = call.arguments['collectionId'];
+    String albumId = call.arguments['albumId'];
     MediumType mediumType = jsonToMediumType(call.arguments['mediumType']);
     int total = call.arguments['total'];
     int skip = call.arguments['skip'];
     int take = call.arguments['take'];
     dynamic mediaPage = Generator.generateMediaPageJson(
-      collectionId: collectionId,
+      albumId: albumId,
       mediumType: mediumType,
       total: total,
       skip: skip,
@@ -37,9 +37,9 @@ Future<dynamic> mockMethodCallHandler(MethodCall call) async {
         mediumId: mediumId, mediumType: mediumType);
     return thumbnail;
   } else if (call.method == "getAlbumThumbnail") {
-    String collectionId = call.arguments['collectionId'];
+    String albumId = call.arguments['albumId'];
     dynamic thumbnail =
-        Generator.generateMockCollectionThumbnail(collectionId: collectionId);
+        Generator.generateMockCollectionThumbnail(albumId: albumId);
     return thumbnail;
   } else if (call.method == "getFile") {
     String mediumId = call.arguments['mediumId'];

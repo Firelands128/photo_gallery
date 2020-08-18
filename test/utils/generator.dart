@@ -13,7 +13,7 @@ class Generator {
         "count": 5,
       },
       {
-        "id": "CollectionId",
+        "id": "AlbumId",
         "mediumType": mediumTypeToJson(mediumType),
         "name": "CollectionName",
         "count": 5,
@@ -28,7 +28,7 @@ class Generator {
   }
 
   static dynamic generateMediaPageJson({
-    String collectionId,
+    String albumId,
     MediumType mediumType,
     int total,
     int skip,
@@ -72,7 +72,7 @@ class Generator {
     int take,
   }) {
     dynamic json = generateMediaPageJson(
-      collectionId: collection.id,
+      albumId: collection.id,
       mediumType: mediumType,
       total: collection.count,
       skip: skip,
@@ -98,7 +98,7 @@ class Generator {
   }
 
   static List<int> generateMockCollectionThumbnail({
-    String collectionId,
+    String albumId,
   }) {
     return [1, 2, 3, 4, 5, 6, 7, 8, 9];
   }

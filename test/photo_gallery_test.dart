@@ -68,10 +68,9 @@ void main() {
   });
 
   test('get collection thumbnail', () async {
-    String collectionId = "__ALL__";
-    List result = await PhotoGallery.getAlbumThumbnail(albumId: collectionId);
-    List expected =
-        Generator.generateMockCollectionThumbnail(collectionId: collectionId);
+    String albumId = "__ALL__";
+    List result = await PhotoGallery.getAlbumThumbnail(albumId: albumId);
+    List expected = Generator.generateMockCollectionThumbnail(albumId: albumId);
     expect(result, expected);
   });
 
