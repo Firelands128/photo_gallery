@@ -63,6 +63,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Video.Media._ID,
             MediaStore.Video.Media.WIDTH,
             MediaStore.Video.Media.HEIGHT,
+            MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media.DATE_TAKEN,
             MediaStore.Video.Media.DATE_MODIFIED
         )
@@ -580,12 +581,14 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
         val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
         val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
+        val durationColumn = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
         val dateTakenColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_TAKEN)
         val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_MODIFIED)
 
         val id = cursor.getLong(idColumn)
         val width = cursor.getLong(widthColumn)
         val height = cursor.getLong(heightColumn)
+        val duration = cursor.getLong(durationColumn)
         var dateTaken: Long? = null
         if (cursor.getType(dateTakenColumn) == FIELD_TYPE_INTEGER) {
             dateTaken = cursor.getLong(dateTakenColumn)
@@ -600,6 +603,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "mediumType" to videoType,
             "width" to width,
             "height" to height,
+            "duration" to duration,
             "creationDate" to dateTaken,
             "modifiedDate" to dateModified
         )

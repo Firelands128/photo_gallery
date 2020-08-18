@@ -17,6 +17,9 @@ class Medium {
   /// The medium height.
   final int height;
 
+  /// The duration of video
+  final int duration;
+
   /// The date at which the photo or video was taken.
   final DateTime creationDate;
 
@@ -28,6 +31,7 @@ class Medium {
     this.mediumType,
     this.width,
     this.height,
+    this.duration,
     this.creationDate,
     this.modifiedDate,
   });
@@ -38,6 +42,7 @@ class Medium {
         mediumType = jsonToMediumType(json["mediumType"]),
         width = json["width"],
         height = json["height"],
+        duration = json['duration'] ?? 0,
         creationDate = json['creationDate'] != null
             ? DateTime.fromMillisecondsSinceEpoch(json['creationDate'])
             : null,
