@@ -206,13 +206,13 @@ class CollectionPageState extends State<CollectionPage> {
 }
 
 class ViewerPage extends StatelessWidget {
-  final Medium media;
+  final Medium medium;
 
-  ViewerPage(Medium media) : media = media;
+  ViewerPage(Medium medium) : medium = medium;
 
   @override
   Widget build(BuildContext context) {
-    DateTime date = media.creationDate ?? media.modifiedDate;
+    DateTime date = medium.creationDate ?? medium.modifiedDate;
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -227,7 +227,7 @@ class ViewerPage extends StatelessWidget {
           child: FadeInImage(
             fit: BoxFit.cover,
             placeholder: MemoryImage(kTransparentImage),
-            image: PhotoProvider(mediumId: media.id),
+            image: PhotoProvider(mediumId: medium.id),
           ),
         ),
       ),
