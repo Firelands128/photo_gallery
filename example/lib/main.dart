@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_gallery/photo_gallery.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:video_player/video_player.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initAsync() async {
     if (await _promptPermissionSetting()) {
       List<Album> collections =
-          await PhotoGallery.listAlbums(mediumType: MediumType.image);
+          await PhotoGallery.listAlbums(mediumType: MediumType.video);
       setState(() {
         _collections = collections;
         _loading = false;
@@ -224,13 +225,81 @@ class ViewerPage extends StatelessWidget {
         ),
         body: Container(
           alignment: Alignment.center,
-          child: FadeInImage(
-            fit: BoxFit.cover,
-            placeholder: MemoryImage(kTransparentImage),
-            image: PhotoProvider(mediumId: medium.id),
-          ),
+          child: medium.mediumType == MediumType.image
+              ? FadeInImage(
+                  fit: BoxFit.cover,
+                  placeholder: MemoryImage(kTransparentImage),
+                  image: PhotoProvider(mediumId: medium.id),
+                )
+              : VideoProvider(
+                  mediumId: medium.id,
+                ),
         ),
       ),
     );
+  }
+}
+
+class VideoProvider extends StatefulWidget {
+  final String mediumId;
+
+  const VideoProvider({
+    @required this.mediumId,
+  });
+
+  @override
+  _VideoProviderState createState() => _VideoProviderState();
+}
+
+class _VideoProviderState extends State<VideoProvider> {
+  VideoPlayerController _controller;
+  File _file;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      initAsync();
+    });
+    super.initState();
+  }
+
+  Future<void> initAsync() async {
+    try {
+      _file = await PhotoGallery.getFile(mediumId: widget.mediumId);
+      _controller = VideoPlayerController.file(_file);
+      _controller.initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+        setState(() {});
+      });
+    } catch (e) {
+      print("Failed : $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _controller == null || !_controller.value.initialized
+        ? Container()
+        : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: VideoPlayer(_controller),
+              ),
+              FlatButton(
+                onPressed: () {
+                  setState(() {
+                    _controller.value.isPlaying
+                        ? _controller.pause()
+                        : _controller.play();
+                  });
+                },
+                child: Icon(
+                  _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                ),
+              ),
+            ],
+          );
   }
 }
