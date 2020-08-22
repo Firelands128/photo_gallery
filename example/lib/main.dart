@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initAsync() async {
     if (await _promptPermissionSetting()) {
       List<Album> collections =
-          await PhotoGallery.listAlbums(mediumType: MediumType.video);
+          await PhotoGallery.listAlbums(mediumType: MediumType.image);
       setState(() {
         _collections = collections;
         _loading = false;
