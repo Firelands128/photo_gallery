@@ -5,9 +5,6 @@ part of photogallery;
 class MediaPage {
   final Album album;
 
-  /// The medium type of [items].
-  final MediumType mediumType;
-
   /// The start offset for those media.
   final int start;
 
@@ -24,7 +21,7 @@ class MediaPage {
   bool get isLast => end >= total;
 
   /// Creates a range of media from platform channel protocol.
-  MediaPage.fromJson(this.album, this.mediumType, dynamic json)
+  MediaPage.fromJson(this.album, dynamic json)
       : start = json['start'],
         total = json['total'],
         items = json['items'].map<Medium>((x) => Medium.fromJson(x)).toList();
@@ -34,7 +31,6 @@ class MediaPage {
     assert(!isLast);
     return PhotoGallery._listMedia(
       album: album,
-      mediumType: mediumType,
       total: total,
       skip: end,
       take: items.length,
@@ -47,23 +43,17 @@ class MediaPage {
       other is MediaPage &&
           runtimeType == other.runtimeType &&
           album == other.album &&
-          mediumType == other.mediumType &&
           start == other.start &&
           total == other.total &&
           listEquals(items, other.items);
 
   @override
   int get hashCode =>
-      album.hashCode ^
-      mediumType.hashCode ^
-      start.hashCode ^
-      total.hashCode ^
-      items.hashCode;
+      album.hashCode ^ start.hashCode ^ total.hashCode ^ items.hashCode;
 
   @override
   String toString() {
     return 'MediaPage{album: $album, '
-        'mediumType: $mediumType, '
         'start: $start, '
         'total: $total, '
         'items: $items}';

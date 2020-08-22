@@ -35,7 +35,6 @@ class PhotoGallery {
 
   static Future<MediaPage> _listMedia({
     @required Album album,
-    @required MediumType mediumType,
     @required int total,
     int skip,
     int take,
@@ -43,12 +42,12 @@ class PhotoGallery {
     assert(album.id != null);
     final json = await _channel.invokeMethod('listMedia', {
       'albumId': album.id,
-      'mediumType': mediumTypeToJson(mediumType),
+      'mediumType': mediumTypeToJson(album.mediumType),
       'total': total,
       'skip': skip,
       'take': take,
     });
-    return MediaPage.fromJson(album, mediumType, json);
+    return MediaPage.fromJson(album, json);
   }
 
   static Future<Medium> getMedium({

@@ -35,7 +35,6 @@ class Album {
   }) {
     return PhotoGallery._listMedia(
       album: this,
-      mediumType: this.mediumType,
       total: this.count,
       skip: skip,
       take: take,
