@@ -1,6 +1,6 @@
 name: photo_gallery
 description: A Flutter plugin that retrieves images and videos from mobile native gallery.
-version: 0.2.3
+version: 0.2.4
 repository: https://github.com/Firelands128/photo_gallery
 
 environment:
@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  video_player: ^0.10.12
 
 dev_dependencies:
   flutter_test:
