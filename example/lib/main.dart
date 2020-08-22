@@ -181,16 +181,17 @@ class CollectionPageState extends State<CollectionPage> {
           crossAxisSpacing: 1.0,
           children: <Widget>[
             ...?_media?.map(
-              (media) => GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => ViewerPage(media))),
+              (medium) => GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ViewerPage(medium))),
                 child: Container(
                   color: Colors.grey[300],
                   child: FadeInImage(
                     fit: BoxFit.cover,
                     placeholder: MemoryImage(kTransparentImage),
                     image: ThumbnailProvider(
-                      mediumId: media.id,
+                      mediumId: medium.id,
+                      mediumType: medium.mediumType,
                       highQuality: true,
                     ),
                   ),
