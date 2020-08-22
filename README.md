@@ -100,6 +100,7 @@ final List<int> data = await medium.getThumbnail(
 ```dart
 final List<int> data = await PhotoGallery.getThumbnail(
     mediumId: mediumId,
+    mediumType: MediumType.image,
     width: 128,
     height: 128,
     highQuality: true,
@@ -138,6 +139,7 @@ FadeInImage(
     placeholder: MemoryImage(kTransparentImage),
     image: ThumbnailProvider(
         mediumId: mediumId,
+        mediumType: MediumType.image,
         width: 128,
         height: 128,
         hightQuality: true,
