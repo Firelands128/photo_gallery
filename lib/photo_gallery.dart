@@ -21,8 +21,7 @@ part 'src/models/medium.dart';
 class PhotoGallery {
   static const MethodChannel _channel = const MethodChannel('photo_gallery');
 
-  /// List all available photo gallery albums and counts number of
-  /// items of [MediumType].
+  /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
     @required MediumType mediumType,
   }) async {
@@ -33,6 +32,7 @@ class PhotoGallery {
     return json.map<Album>((x) => Album.fromJson(x)).toList();
   }
 
+  /// List all available media in a specific album, support pagination of media
   static Future<MediaPage> _listMedia({
     @required Album album,
     @required int total,
@@ -50,6 +50,7 @@ class PhotoGallery {
     return MediaPage.fromJson(album, json);
   }
 
+  /// Get medium metadata by medium id
   static Future<Medium> getMedium({
     @required String mediumId,
     MediumType mediumType,
@@ -62,6 +63,7 @@ class PhotoGallery {
     return Medium.fromJson(json);
   }
 
+  /// Get medium thumbnail by medium id
   static Future<List<dynamic>> getThumbnail({
     @required String mediumId,
     MediumType mediumType,
@@ -80,6 +82,7 @@ class PhotoGallery {
     return bytes;
   }
 
+  /// Get album thumbnail by album id
   static Future<List<dynamic>> getAlbumThumbnail({
     @required String albumId,
     int width,
@@ -96,6 +99,7 @@ class PhotoGallery {
     return bytes;
   }
 
+  /// get medium file by medium id
   static Future<File> getFile({
     @required String mediumId,
     MediumType mediumType,
