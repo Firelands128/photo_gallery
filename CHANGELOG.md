@@ -1,4 +1,4 @@
-## 0.2.2
+## 0.2.3
 
 add ```MediumType``` attribute in ```ThumbnailProvider```
 Fix a bug that throw ```FileNotFountException``` when load image and video thumbnail doesn't exists on Android API 29+
