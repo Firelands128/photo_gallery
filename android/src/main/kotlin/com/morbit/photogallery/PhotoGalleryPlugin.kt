@@ -402,11 +402,15 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         val bitmap: Bitmap? = this.context?.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                this.contentResolver.loadThumbnail(
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
-                    Size(width ?: 72, height ?: 72),
+                try {
+                    this.contentResolver.loadThumbnail(
+                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
+                        Size(width ?: 72, height ?: 72),
+                        null
+                    )
+                } catch (e: Exception) {
                     null
-                )
+                }
             } else {
                 MediaStore.Images.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
@@ -430,11 +434,15 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         val bitmap: Bitmap? = this.context?.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                this.contentResolver.loadThumbnail(
-                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
-                    Size(width ?: 72, height ?: 72),
+                try {
+                    this.contentResolver.loadThumbnail(
+                        ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
+                        Size(width ?: 72, height ?: 72),
+                        null
+                    )
+                } catch (e: Exception) {
                     null
-                )
+                }
             } else {
                 MediaStore.Video.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
