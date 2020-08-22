@@ -1,9 +1,8 @@
-## 0.2.2-beta
+## 0.2.2
 
+add ```MediumType``` attribute in ```ThumbnailProvider```
+Fix a bug that throw ```FileNotFountException``` when load image and video thumbnail doesn't exists on Android API 29+
 Change medium creationDate and modifiedDate precision from second to millisecond on iOS platform.
-
-## 0.2.1-beta
-
 Add video duration attribute in Medium.
 
 ## 0.2.0+1
