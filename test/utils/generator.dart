@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:photo_gallery/photo_gallery.dart';
 
 class Generator {
-  static dynamic generateCollectionsJson({MediumType mediumType}) {
+  static dynamic generateAlbumsJson({MediumType mediumType}) {
     mediumType = mediumType ?? MediumType.image;
     return [
       {
@@ -15,14 +15,14 @@ class Generator {
       {
         "id": "AlbumId",
         "mediumType": mediumTypeToJson(mediumType),
-        "name": "CollectionName",
+        "name": "AlbumName",
         "count": 5,
       }
     ];
   }
 
-  static List<Album> generateCollections({MediumType mediumType}) {
-    return Generator.generateCollectionsJson(mediumType: mediumType)
+  static List<Album> generateAlbums({MediumType mediumType}) {
+    return Generator.generateAlbumsJson(mediumType: mediumType)
         .map<Album>((x) => Album.fromJson(x))
         .toList();
   }
@@ -66,19 +66,19 @@ class Generator {
   }
 
   static MediaPage generateMediaPage({
-    Album collection,
+    Album album,
     MediumType mediumType,
     int skip,
     int take,
   }) {
     dynamic json = generateMediaPageJson(
-      albumId: collection.id,
+      albumId: album.id,
       mediumType: mediumType,
-      total: collection.count,
+      total: album.count,
       skip: skip,
       take: take,
     );
-    return MediaPage.fromJson(collection, mediumType, json);
+    return MediaPage.fromJson(album, json);
   }
 
   static Medium generateMedia({
@@ -97,7 +97,7 @@ class Generator {
     return [1, 2, 3, 4, 5, 6, 7, 8, 9];
   }
 
-  static List<int> generateMockCollectionThumbnail({
+  static List<int> generateMockAlbumThumbnail({
     String albumId,
   }) {
     return [1, 2, 3, 4, 5, 6, 7, 8, 9];

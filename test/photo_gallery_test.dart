@@ -23,7 +23,7 @@ void main() {
   test('list albums', () async {
     MediumType mediumType = MediumType.image;
     var result = await PhotoGallery.listAlbums(mediumType: mediumType);
-    var expected = Generator.generateCollections(mediumType: mediumType);
+    var expected = Generator.generateAlbums(mediumType: mediumType);
     expect(result, expected);
   });
 
@@ -31,13 +31,11 @@ void main() {
     MediumType mediumType = MediumType.image;
     int skip = 0;
     int take = 1;
-    List<Album> collections =
-        await PhotoGallery.listAlbums(mediumType: mediumType);
-    Album allCollection =
-        collections.firstWhere((element) => element.isAllAlbum);
-    MediaPage result = await allCollection.listMedia(skip: skip, take: take);
+    List<Album> albums = await PhotoGallery.listAlbums(mediumType: mediumType);
+    Album allAlbum = albums.firstWhere((element) => element.isAllAlbum);
+    MediaPage result = await allAlbum.listMedia(skip: skip, take: take);
     MediaPage expected = Generator.generateMediaPage(
-      collection: allCollection,
+      album: allAlbum,
       mediumType: mediumType,
       skip: skip,
       take: take,
@@ -67,10 +65,10 @@ void main() {
     expect(result, expected);
   });
 
-  test('get collection thumbnail', () async {
+  test('get album thumbnail', () async {
     String albumId = "__ALL__";
     List result = await PhotoGallery.getAlbumThumbnail(albumId: albumId);
-    List expected = Generator.generateMockCollectionThumbnail(albumId: albumId);
+    List expected = Generator.generateMockAlbumThumbnail(albumId: albumId);
     expect(result, expected);
   });
 

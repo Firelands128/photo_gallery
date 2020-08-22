@@ -7,9 +7,8 @@ import 'generator.dart';
 Future<dynamic> mockMethodCallHandler(MethodCall call) async {
   if (call.method == "listAlbums") {
     MediumType mediumType = jsonToMediumType(call.arguments['mediumType']);
-    dynamic collections =
-        Generator.generateCollectionsJson(mediumType: mediumType);
-    return collections;
+    dynamic albums = Generator.generateAlbumsJson(mediumType: mediumType);
+    return albums;
   } else if (call.method == "listMedia") {
     String albumId = call.arguments['albumId'];
     MediumType mediumType = jsonToMediumType(call.arguments['mediumType']);
@@ -38,8 +37,7 @@ Future<dynamic> mockMethodCallHandler(MethodCall call) async {
     return thumbnail;
   } else if (call.method == "getAlbumThumbnail") {
     String albumId = call.arguments['albumId'];
-    dynamic thumbnail =
-        Generator.generateMockCollectionThumbnail(albumId: albumId);
+    dynamic thumbnail = Generator.generateMockAlbumThumbnail(albumId: albumId);
     return thumbnail;
   } else if (call.method == "getFile") {
     String mediumId = call.arguments['mediumId'];
