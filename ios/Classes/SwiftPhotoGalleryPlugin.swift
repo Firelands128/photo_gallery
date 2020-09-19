@@ -346,6 +346,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         || asset.mediaType == PHAssetMediaType.audio) {
         let options = PHVideoRequestOptions()
         options.isNetworkAccessAllowed = true
+        options.deliveryMode = .highQualityFormat
         options.version = .current
         
         manager.requestAVAsset(forVideo: asset, options: options, resultHandler: { (avAsset, avAudioMix, info) in
