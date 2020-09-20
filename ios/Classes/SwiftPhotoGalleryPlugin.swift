@@ -224,9 +224,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset: PHAsset = assets[0]
       
       let options = PHImageRequestOptions()
-      options.deliveryMode = (highQuality ?? false)
-        ? PHImageRequestOptionsDeliveryMode.highQualityFormat
-        : PHImageRequestOptionsDeliveryMode.fastFormat
+      options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
       options.isSynchronous = false
       options.isNetworkAccessAllowed = true
       options.version = .current
@@ -275,9 +273,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset: PHAsset = assets[0]
       
       let options = PHImageRequestOptions()
-      options.deliveryMode = (highQuality ?? false)
-        ? PHImageRequestOptionsDeliveryMode.highQualityFormat
-        : PHImageRequestOptionsDeliveryMode.fastFormat
+      options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
       options.isSynchronous = false
       options.isNetworkAccessAllowed = true
       options.version = .current
@@ -318,7 +314,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset: PHAsset = assets[0]
       if(asset.mediaType == PHAssetMediaType.image) {
         let options = PHImageRequestOptions()
-        options.deliveryMode = PHImageRequestOptionsDeliveryMode.highQualityFormat
+        options.deliveryMode = .highQualityFormat
         options.isSynchronous = false
         options.isNetworkAccessAllowed = true
         options.version = .current
