@@ -1,3 +1,9 @@
+## 0.3.0
+
+Force getFile to use high quality format for videos in iOS platform.
+
+Add optional mediumType parameter of getAlbumThumbnail api method to display video thumbnail correctly.
+
 ## 0.2.5
 
 Remove ```MediumType``` attribute in ```MediaPage```.
