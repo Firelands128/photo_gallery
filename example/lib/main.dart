@@ -18,7 +18,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List _collections;
+  List _albums;
   bool _loading = false;
 
   @override
@@ -30,10 +30,10 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> initAsync() async {
     if (await _promptPermissionSetting()) {
-      List<Album> collections =
+      List<Album> albums =
           await PhotoGallery.listAlbums(mediumType: MediumType.image);
       setState(() {
-        _collections = collections;
+        _albums = albums;
         _loading = false;
       });
     }
@@ -76,12 +76,11 @@ class _MyAppState extends State<MyApp> {
                       mainAxisSpacing: 5.0,
                       crossAxisSpacing: 5.0,
                       children: <Widget>[
-                        ...?_collections?.map(
-                          (collection) => GestureDetector(
+                        ...?_albums?.map(
+                          (album) => GestureDetector(
                             onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                    builder: (context) =>
-                                        CollectionPage(collection))),
+                                    builder: (context) => AlbumPage(album))),
                             child: Column(
                               children: <Widget>[
                                 ClipRRect(
@@ -95,7 +94,7 @@ class _MyAppState extends State<MyApp> {
                                       placeholder:
                                           MemoryImage(kTransparentImage),
                                       image: AlbumThumbnailProvider(
-                                        albumId: collection.id,
+                                        albumId: album.id,
                                         highQuality: true,
                                       ),
                                     ),
@@ -105,7 +104,7 @@ class _MyAppState extends State<MyApp> {
                                   alignment: Alignment.topLeft,
                                   padding: EdgeInsets.only(left: 2.0),
                                   child: Text(
-                                    collection.name,
+                                    album.name,
                                     maxLines: 1,
                                     textAlign: TextAlign.start,
                                     style: TextStyle(
@@ -118,7 +117,7 @@ class _MyAppState extends State<MyApp> {
                                   alignment: Alignment.topLeft,
                                   padding: EdgeInsets.only(left: 2.0),
                                   child: Text(
-                                    collection.count.toString(),
+                                    album.count.toString(),
                                     textAlign: TextAlign.start,
                                     style: TextStyle(
                                       height: 1.2,
@@ -140,16 +139,16 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class CollectionPage extends StatefulWidget {
-  final Album collection;
+class AlbumPage extends StatefulWidget {
+  final Album album;
 
-  CollectionPage(Album collection) : collection = collection;
+  AlbumPage(Album album) : album = album;
 
   @override
-  State<StatefulWidget> createState() => CollectionPageState();
+  State<StatefulWidget> createState() => AlbumPageState();
 }
 
-class CollectionPageState extends State<CollectionPage> {
+class AlbumPageState extends State<AlbumPage> {
   List<Medium> _media;
 
   @override
@@ -159,7 +158,7 @@ class CollectionPageState extends State<CollectionPage> {
   }
 
   void initAsync() async {
-    MediaPage mediaPage = await widget.collection.listMedia();
+    MediaPage mediaPage = await widget.album.listMedia();
     setState(() {
       _media = mediaPage.items;
     });
@@ -174,7 +173,7 @@ class CollectionPageState extends State<CollectionPage> {
             icon: Icon(Icons.arrow_back_ios),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(widget.collection.name),
+          title: Text(widget.album.name),
         ),
         body: GridView.count(
           crossAxisCount: 3,
