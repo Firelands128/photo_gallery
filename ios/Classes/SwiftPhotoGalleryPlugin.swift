@@ -224,10 +224,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset: PHAsset = assets[0]
       
       let options = PHImageRequestOptions()
-      options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
       options.isSynchronous = false
-      options.isNetworkAccessAllowed = true
       options.version = .current
+      options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
+      options.isNetworkAccessAllowed = true
       
       let imageSize = CGSize(width: width?.intValue ?? 128, height: height?.intValue ?? 128)
       manager.requestImage(
@@ -273,10 +273,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset: PHAsset = assets[0]
       
       let options = PHImageRequestOptions()
-      options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
       options.isSynchronous = false
-      options.isNetworkAccessAllowed = true
       options.version = .current
+      options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
+      options.isNetworkAccessAllowed = true
       
       let imageSize = CGSize(width: width ?? 128, height: height ?? 128)
       manager.requestImage(
@@ -314,10 +314,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset: PHAsset = assets[0]
       if(asset.mediaType == PHAssetMediaType.image) {
         let options = PHImageRequestOptions()
-        options.deliveryMode = .highQualityFormat
         options.isSynchronous = false
-        options.isNetworkAccessAllowed = true
         options.version = .current
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
         
         manager.requestImageData(
           for: asset,
@@ -341,9 +341,9 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       } else if(asset.mediaType == PHAssetMediaType.video
         || asset.mediaType == PHAssetMediaType.audio) {
         let options = PHVideoRequestOptions()
-        options.isNetworkAccessAllowed = true
-        options.deliveryMode = .highQualityFormat
         options.version = .current
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
         
         manager.requestAVAsset(forVideo: asset, options: options, resultHandler: { (avAsset, avAudioMix, info) in
           DispatchQueue.main.async(execute: {
