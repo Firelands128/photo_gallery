@@ -4,12 +4,14 @@ part of photogallery;
 class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   const AlbumThumbnailProvider({
     @required this.albumId,
+    this.mediumType,
     this.height,
     this.width,
     this.highQuality = false,
   }) : assert(albumId != null);
 
   final String albumId;
+  final MediumType mediumType;
   final int height;
   final int width;
   final bool highQuality;
@@ -30,6 +32,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
     assert(key == this);
     final bytes = await PhotoGallery.getAlbumThumbnail(
       albumId: albumId,
+      mediumType: mediumType,
       height: height,
       width: width,
       highQuality: highQuality,

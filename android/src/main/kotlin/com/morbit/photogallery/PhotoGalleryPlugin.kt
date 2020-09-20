@@ -122,10 +122,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             }
             "getAlbumThumbnail" -> {
                 val albumId = call.argument<String>("albumId")
+                val mediumType = call.argument<String>("mediumType")
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
                 BackgroundAsyncTask({
-                    getAlbumThumbnail(albumId!!, width, height)
+                    getAlbumThumbnail(albumId!!, mediumType, width, height)
                 }, { v ->
                     result.success(v)
                 })
@@ -461,7 +462,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return byteArray
     }
 
-    private fun getAlbumThumbnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getAlbumThumbnail(albumId: String, mediumType: String?, width: Int?, height: Int?): ByteArray? {
+        return when (mediumType) {
+            imageType -> {
+                getImageAlbumThubnail(albumId, width, height)
+            }
+            videoType -> {
+                getVideoAlbumThubnail(albumId, width, height)
+            }
+            else -> {
+                getImageAlbumThubnail(albumId, width, height)
+                    ?: getVideoAlbumThubnail(albumId, width, height)
+            }
+        }
+    }
+
+    private fun getImageAlbumThubnail(albumId: String, width: Int?, height: Int?): ByteArray? {
         return this.context?.run {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -478,6 +494,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
+            return null
+        }
+    }
+
+    private fun getVideoAlbumThubnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+        return this.context?.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Video.Media._ID),
@@ -493,7 +515,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
-            return@run null
+            return null
         }
     }
 

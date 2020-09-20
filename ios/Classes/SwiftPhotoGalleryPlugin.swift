@@ -52,11 +52,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     else if(call.method == "getAlbumThumbnail") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let albumId = arguments["albumId"] as! String
+      let mediumType = arguments["mediumType"] as? String
       let width = arguments["width"] as? Int
       let height = arguments["height"] as? Int
       let highQuality = arguments["highQuality"] as? Bool
       getAlbumThumbnail(
         albumId: albumId,
+        mediumType: mediumType,
         width: width,
         height: height,
         highQuality: highQuality,
@@ -251,6 +253,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   
   private func getAlbumThumbnail(
     albumId: String,
+    mediumType: String?,
     width: Int?,
     height: Int?,
     highQuality: Bool?,
@@ -258,6 +261,9 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   ) {
     let manager = PHImageManager.default()
     let fetchOptions = PHFetchOptions()
+    if (mediumType != nil) {
+      fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType!)
+    }
     fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1

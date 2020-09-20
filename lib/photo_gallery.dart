@@ -85,6 +85,7 @@ class PhotoGallery {
   /// Get album thumbnail by album id
   static Future<List<dynamic>> getAlbumThumbnail({
     @required String albumId,
+    MediumType mediumType,
     int width,
     int height,
     bool highQuality,
@@ -92,6 +93,7 @@ class PhotoGallery {
     assert(albumId != null);
     final bytes = await _channel.invokeMethod('getAlbumThumbnail', {
       'albumId': albumId,
+      'mediumType': mediumTypeToJson(mediumType),
       'width': width,
       'height': height,
       'highQuality': highQuality,
