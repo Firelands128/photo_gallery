@@ -15,15 +15,17 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     if(call.method == "listAlbums") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let mediumType = arguments["mediumType"] as! String
-      result(listAlbums(mediumType: mediumType))
+      let mediumSubtype = arguments["mediumSubtype"] as? String
+      result(listAlbums(mediumType: mediumType, mediumSubtype: mediumSubtype))
     }
     else if(call.method == "listMedia") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let albumId = arguments["albumId"] as! String
       let mediumType = arguments["mediumType"] as! String
+      let mediumSubtype = arguments["mediumSubtype"] as? String
       let skip = arguments["skip"] as? NSNumber
       let take = arguments["take"] as? NSNumber
-      result(listMedia(albumId: albumId, skip: skip, take: take, mediumType: mediumType))
+      result(listMedia(albumId: albumId, skip: skip, take: take, mediumType: mediumType, mediumSubtype: mediumSubtype))
     }
     else if(call.method == "getMedium") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -53,12 +55,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let albumId = arguments["albumId"] as! String
       let mediumType = arguments["mediumType"] as? String
+      let mediumSubtype = arguments["mediumSubtype"] as? String
       let width = arguments["width"] as? Int
       let height = arguments["height"] as? Int
       let highQuality = arguments["highQuality"] as? Bool
       getAlbumThumbnail(
         albumId: albumId,
         mediumType: mediumType,
+        mediumSubtype: mediumSubtype,
         width: width,
         height: height,
         highQuality: highQuality,
@@ -82,7 +86,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   
   private var assetCollections : [PHAssetCollection]  = []
   
-  private func listAlbums(mediumType: String) -> [NSDictionary] {
+  private func listAlbums(mediumType: String, mediumSubtype: String?) -> [NSDictionary] {
     self.assetCollections = []
     let fetchOptions = PHFetchOptions()
     var total = 0
@@ -99,7 +103,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       albumIds.insert(albumId)
       
       let options = PHFetchOptions()
-      options.predicate = self.predicateFromMediumType(mediumType: mediumType)
+      options.predicate = self.predicateFromMediumType(mediumType: mediumType, mediumSubtype: mediumSubtype)
       if #available(iOS 9, *) {
         fetchOptions.fetchLimit = 1
       }
@@ -109,6 +113,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         self.assetCollections.append(collection)
         albums.append([
           "id": collection.localIdentifier,
+          "mediumSubtype": mediumSubtype ?? "",
           "mediumType": mediumType,
           "name": collection.localizedTitle ?? "Unknown",
           "count": count,
@@ -147,16 +152,17 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     albums.insert([
       "id": "__ALL__",
       "mediumType": mediumType,
+      "mediumSubtype": mediumSubtype ?? "",
       "name": "All",
-      "count" : countMedia(collection: nil, mediumTypes: [mediumType]),
+      "count" : countMedia(collection: nil, mediumTypes: [mediumType], mediumSubtype: mediumSubtype),
     ], at: 0)
     
     return albums
   }
   
-  private func countMedia(collection: PHAssetCollection?, mediumTypes: [String]) -> Int {
+  private func countMedia(collection: PHAssetCollection?, mediumTypes: [String], mediumSubtype: String?) -> Int {
     let options = PHFetchOptions()
-    options.predicate = self.predicateFromMediumTypes(mediumTypes: mediumTypes)
+    options.predicate = self.predicateFromMediumTypes(mediumTypes: mediumTypes, mediumSubtype: mediumSubtype)
     if(collection == nil) {
       return PHAsset.fetchAssets(with: options).count
     }
@@ -164,10 +170,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return PHAsset.fetchAssets(in: collection!, options: options).count
   }
   
-  private func listMedia(albumId: String, skip: NSNumber?, take: NSNumber?, mediumType: String) -> NSDictionary {
+  private func listMedia(albumId: String, skip: NSNumber?, take: NSNumber?, mediumType: String, mediumSubtype: String?) -> NSDictionary {
     let fetchOptions = PHFetchOptions()
     fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-    fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
+    fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType, mediumSubtype: mediumSubtype)
     
     let collection = self.assetCollections.first(where: { (collection) -> Bool in
       collection.localIdentifier == albumId
@@ -254,6 +260,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func getAlbumThumbnail(
     albumId: String,
     mediumType: String?,
+    mediumSubtype: String?,
     width: Int?,
     height: Int?,
     highQuality: Bool?,
@@ -262,7 +269,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let manager = PHImageManager.default()
     let fetchOptions = PHFetchOptions()
     if (mediumType != nil) {
-      fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType!)
+      fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType!, mediumSubtype: mediumSubtype)
     }
     fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
     if #available(iOS 9, *) {
@@ -430,15 +437,34 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
   }
   
-  private func predicateFromMediumTypes(mediumTypes: [String]) -> NSPredicate {
+  private func toSwiftMediumSubtype(value: String?) -> PHAssetMediaSubtype? {
+    switch value {
+    case "": return nil
+    case "photoLive": return PHAssetMediaSubtype.photoLive
+    default: return nil
+    }
+  }
+  
+  private func toDartMediumSubtype(value: PHAssetMediaSubtype) -> String? {
+    switch value {
+    case PHAssetMediaSubtype.photoLive: return "photoLive"
+    default: return nil
+    }
+  }
+  
+  private func predicateFromMediumTypes(mediumTypes: [String], mediumSubtype: String?) -> NSPredicate {
     let predicates = mediumTypes.map { (dartValue) -> NSPredicate in
-      return predicateFromMediumType(mediumType: dartValue)
+      return predicateFromMediumType(mediumType: dartValue, mediumSubtype: mediumSubtype)
     }
     return NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.or, subpredicates: predicates)
   }
   
-  private func predicateFromMediumType(mediumType: String) -> NSPredicate {
+  private func predicateFromMediumType(mediumType: String, mediumSubtype: String?) -> NSPredicate {
     let swiftType = toSwiftMediumType(value: mediumType)
-    return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
+    if let swiftSubtype = toSwiftMediumSubtype(value: mediumSubtype) {
+      return NSPredicate(format: "(mediaType = %d) AND ((mediaSubtype & %d) != 0)", swiftType!.rawValue, swiftSubtype.rawValue);
+    } else {
+      return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
+    }
   }
 }

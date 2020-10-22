@@ -27,3 +27,26 @@ MediumType jsonToMediumType(String value) {
       return null;
   }
 }
+
+
+enum MediumSubtype {
+  phoneLive
+}
+
+String mediumSubtypeToJson(MediumSubtype value) {
+  switch (value) {
+    case MediumSubtype.phoneLive:
+      return 'phoneLive';
+    default:
+      return null;
+  }
+}
+
+MediumSubtype jsonToMediumSubtype(String value) {
+  switch (value) {
+    case 'phoneLive':
+      return MediumSubtype.phoneLive;
+    default:
+      return null;
+  }
+}
