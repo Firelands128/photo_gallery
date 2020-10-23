@@ -20,6 +20,12 @@ class Medium {
   /// The duration of video
   final int duration;
 
+  /// The MIME of medium
+  final String mime;
+
+  /// The uniformTypeIdentifier of medium for iOS
+  final String assetUTI;
+
   /// The date at which the photo or video was taken.
   final DateTime creationDate;
 
@@ -32,6 +38,8 @@ class Medium {
     this.width,
     this.height,
     this.duration,
+    this.mime,
+    this.assetUTI,
     this.creationDate,
     this.modifiedDate,
   });
@@ -42,6 +50,8 @@ class Medium {
         mediumType = jsonToMediumType(json["mediumType"]),
         width = json["width"],
         height = json["height"],
+        mime = json["mime"],
+        assetUTI = json["assetUTI"],
         duration = json['duration'] ?? 0,
         creationDate = json['creationDate'] != null
             ? DateTime.fromMillisecondsSinceEpoch(json['creationDate'])
@@ -54,6 +64,8 @@ class Medium {
     return Medium(
       id: map['id'],
       mediumType: jsonToMediumType(map['mediumType']),
+      mime: map["mime"],
+      assetUTI: map["assetUTI"],
       width: map['width'],
       height: map['height'],
       creationDate: map['creationDate'],
@@ -67,6 +79,8 @@ class Medium {
       "mediumType": mediumTypeToJson(this.mediumType),
       "height": this.height,
       "width": this.width,
+      "mime": this.mime,
+      "assetUTI": this.assetUTI,
       "creationDate": this.creationDate,
       "modifiedDate": this.modifiedDate,
     };

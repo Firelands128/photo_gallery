@@ -586,12 +586,15 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID)
         val widthColumn = cursor.getColumnIndex(MediaStore.Images.Media.WIDTH)
         val heightColumn = cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT)
+        val mimeColumn = cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE)
         val dateTakenColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
         val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED)
 
         val id = cursor.getLong(idColumn)
         val width = cursor.getLong(widthColumn)
         val height = cursor.getLong(heightColumn)
+        val mime = cursor.getString(mimeColumn)
+
         var dateTaken: Long? = null
         if (cursor.getType(dateTakenColumn) == FIELD_TYPE_INTEGER) {
             dateTaken = cursor.getLong(dateTakenColumn)
@@ -606,6 +609,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "mediumType" to imageType,
             "width" to width,
             "height" to height,
+            "mime" to mime,
             "creationDate" to dateTaken,
             "modifiedDate" to dateModified
         )

@@ -392,25 +392,19 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
     
-    var imageAnimated = false
-    if #available(iOS 11, *) {
-      if asset.playbackStyle == .imageAnimated {
-        imageAnimated = true
-      }
-    } else {
-      if let identifier = asset.value(forKey: "uniformTypeIdentifier") as? String
-      {
-        if identifier == kUTTypeGIF as String
-        {
-          imageAnimated = true
-        }
-      }
+    var mimeType: String?
+    var assetUTI: String?
+    let resourceList = PHAssetResource.assetResources(for: asset)
+    if let resource = resourceList.first {
+      let uniformTypeIdentifier = resource.uniformTypeIdentifier
+      mimeType = UTTypeCopyPreferredTagWithClass(uniformTypeIdentifier as CFString, kUTTagClassMIMEType as CFString)?.takeRetainedValue() as String?
+      assetUTI = uniformTypeIdentifier
     }
-    
     return [
       "id": asset.localIdentifier,
       "mediumType": toDartMediumType(value: asset.mediaType),
-      "imageAnimated": imageAnimated,
+      "mime": mimeType ?? "",
+      "assetUTI": assetUTI ?? "",
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
       "duration": NSInteger(asset.duration * 1000),
