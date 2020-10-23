@@ -1,1 +1,8 @@
-.DS_Store.dart_tool/.packages.pub/build/.idea/*.iml
+
+.DS_Store
+.dart_tool/
+.packages
+.pub/
+build/
+.idea/
+*.iml

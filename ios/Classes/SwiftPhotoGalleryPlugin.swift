@@ -394,9 +394,17 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     
     var mimeType: String?
     var assetUTI: String?
-    let resourceList = PHAssetResource.assetResources(for: asset)
-    if let resource = resourceList.first {
-      let uniformTypeIdentifier = resource.uniformTypeIdentifier
+    var uniformTypeIdentifier: String?
+
+    if #available(iOS 9, *) {
+      let resourceList = PHAssetResource.assetResources(for: asset)
+      if let resource = resourceList.first {
+        uniformTypeIdentifier = resource.uniformTypeIdentifier
+      }
+    } else {
+      uniformTypeIdentifier = asset.value(forKey: "uniformTypeIdentifier") as? String
+    }
+    if let uniformTypeIdentifier = uniformTypeIdentifier {
       mimeType = UTTypeCopyPreferredTagWithClass(uniformTypeIdentifier as CFString, kUTTagClassMIMEType as CFString)?.takeRetainedValue() as String?
       assetUTI = uniformTypeIdentifier
     }
