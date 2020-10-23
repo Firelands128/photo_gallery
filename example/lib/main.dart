@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initAsync() async {
     if (await _promptPermissionSetting()) {
       List<Album> albums =
-          await PhotoGallery.listAlbums(mediumType: MediumType.image, mediumSubtype: MediumSubtype.iOSPhotoLive);
+          await PhotoGallery.listAlbums(mediumType: MediumType.image);
       setState(() {
         _albums = albums;
         _loading = false;
