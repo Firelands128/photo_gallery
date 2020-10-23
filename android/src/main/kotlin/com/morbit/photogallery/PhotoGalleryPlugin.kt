@@ -17,6 +17,7 @@ import android.database.Cursor.FIELD_TYPE_INTEGER
 import android.os.AsyncTask
 import android.os.Build
 import android.util.Size
+import android.webkit.MimeTypeMap
 
 /** PhotoGalleryPlugin */
 class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
@@ -78,8 +79,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         when (call.method) {
             "listAlbums" -> {
                 val mediumType = call.argument<String>("mediumType")
+                val mediumSubtype = call.argument<String>("mediumSubtype")
                 BackgroundAsyncTask({
-                    listAlbums(mediumType!!)
+                    listAlbums(mediumType!!, mediumSubtype)
                 }, { v ->
                     result.success(v)
                 })
@@ -87,13 +89,14 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "listMedia" -> {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
+                val mediumSubtype = call.argument<String>("mediumSubtype")
                 val total = call.argument<Int>("total")
                 val skip = call.argument<Int>("skip")
                 val take = call.argument<Int>("take")
                 BackgroundAsyncTask({
                     when (mediumType) {
-                        imageType -> listImages(albumId!!, total!!, skip, take)
-                        videoType -> listVideos(albumId!!, total!!, skip, take)
+                        imageType -> listImages(albumId!!, total!!, skip, take, mediumSubtype)
+                        videoType -> listVideos(albumId!!, total!!, skip, take, mediumSubtype)
                         else -> null
                     }
                 }, { v ->
@@ -123,10 +126,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "getAlbumThumbnail" -> {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
+                val mediumSubtype = call.argument<String>("mediumSubtype")
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
                 BackgroundAsyncTask({
-                    getAlbumThumbnail(albumId!!, mediumType, width, height)
+                    getAlbumThumbnail(albumId!!, mediumType, mediumSubtype, width, height)
                 }, { v ->
                     result.success(v)
                 })
@@ -148,13 +152,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
     }
 
-    private fun listAlbums(mediumType: String): List<Map<String, Any>> {
+    private fun listAlbums(mediumType: String, mediumSubtype: String?): List<Map<String, Any>> {
         return when (mediumType) {
             imageType -> {
-                listImageAlbums()
+                listImageAlbums(mediumSubtype)
             }
             videoType -> {
-                listVideoAlbums()
+                listVideoAlbums(mediumSubtype)
             }
             else -> {
                 listOf()
@@ -162,7 +166,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun listImageAlbums(): List<Map<String, Any>> {
+    private fun listImageAlbums(mediumSubtype: String?): List<Map<String, Any>> {
         this.context?.run {
             var total = 0
             val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
@@ -218,7 +222,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return listOf()
     }
 
-    private fun listVideoAlbums(): List<Map<String, Any>> {
+    private fun listVideoAlbums(mediumSubtype: String?): List<Map<String, Any>> {
         this.context?.run {
             var total = 0
             val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
@@ -271,17 +275,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return listOf()
     }
 
-    private fun listImages(albumId: String, total: Int, skip: Int?, take: Int?): Map<String, Any> {
+    private fun listImages(albumId: String, total: Int, skip: Int?, take: Int?, mediumSubtype: String?): Map<String, Any> {
         val media = mutableListOf<Map<String, Any?>>()
         val offset = skip ?: 0
         val limit = take ?: (total - offset)
+
+        val queryCondition = generateQueryCondition(albumId, MediaStore.Images.Media.BUCKET_ID,  mediumSubtype, MediaStore.Video.Media.MIME_TYPE)
+        val selectionConditions = queryCondition[0]
+        val selection = if (selectionConditions.count() > 0) selectionConditions.joinToString(separator = " AND ") else null
+        val selectionArgs = queryCondition[1].toTypedArray()
 
         this.context?.run {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 imageMetadataProjection,
-                if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
-                null,
+                selection,
+                selectionArgs,
                 "$imageOrderBy LIMIT $limit OFFSET $offset"
             )
 
@@ -299,17 +308,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         )
     }
 
-    private fun listVideos(albumId: String, total: Int, skip: Int?, take: Int?): Map<String, Any> {
+    private fun listVideos(albumId: String, total: Int, skip: Int?, take: Int?, mediumSubtype: String?): Map<String, Any> {
         val media = mutableListOf<Map<String, Any?>>()
         val offset = skip ?: 0
         val limit = take ?: (total - offset)
+
+        val queryCondition = generateQueryCondition(albumId, MediaStore.Video.Media.BUCKET_ID, mediumSubtype, MediaStore.Video.Media.MIME_TYPE)
+        val selectionConditions = queryCondition[0]
+        val selection = if (selectionConditions.count() > 0) selectionConditions.joinToString(separator = " AND ") else null
+        val selectionArgs = queryCondition[1].toTypedArray()
 
         this.context?.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 videoMetadataProjection,
-                if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
-                null,
+                selection,
+                selectionArgs,
                 "$videoOrderBy LIMIT $limit OFFSET $offset")
 
             videoCursor?.use { cursor ->
@@ -324,6 +338,26 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "total" to total,
             "items" to media
         )
+    }
+
+    private  fun generateQueryCondition(albumId: String,
+                                        buckIDKey: String = MediaStore.Images.Media.BUCKET_ID,
+                                        mediumSubtype: String?,
+                                        mimeTypeKey : String = MediaStore.Images.Media.MIME_TYPE): Array<MutableList<String>>  {
+        var selectionConditions = mutableListOf<String>()
+        var selectionArgs = mutableListOf<String>()
+        if (albumId != allAlbumId) {
+            selectionConditions.add(element = "${buckIDKey} = ?")
+            selectionArgs.add(element = albumId)
+        }
+        if (mediumSubtype != null) {
+            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(mediumSubtype)
+            if (mimeType != null) {
+                selectionConditions.add(element = "${MediaStore.Images.Media.MIME_TYPE} = ?")
+                selectionArgs.add(element = mimeType)
+            }
+        }
+        return arrayOf(selectionConditions, selectionArgs)
     }
 
     private fun getMedium(mediumId: String, mediumType: String?): Map<String, Any?>? {
@@ -462,28 +496,32 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return byteArray
     }
 
-    private fun getAlbumThumbnail(albumId: String, mediumType: String?, width: Int?, height: Int?): ByteArray? {
+    private fun getAlbumThumbnail(albumId: String, mediumType: String?, mediumSubtype: String?, width: Int?, height: Int?): ByteArray? {
         return when (mediumType) {
             imageType -> {
-                getImageAlbumThubnail(albumId, width, height)
+                getImageAlbumThumbnail(albumId, mediumSubtype, width, height)
             }
             videoType -> {
-                getVideoAlbumThubnail(albumId, width, height)
+                getVideoAlbumThumbnail(albumId, mediumSubtype, width, height)
             }
             else -> {
-                getImageAlbumThubnail(albumId, width, height)
-                    ?: getVideoAlbumThubnail(albumId, width, height)
+                getImageAlbumThumbnail(albumId, mediumSubtype, width, height)
+                    ?: getVideoAlbumThumbnail(albumId, mediumSubtype, width, height)
             }
         }
     }
 
-    private fun getImageAlbumThubnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getImageAlbumThumbnail(albumId: String, mediumSubtype: String?, width: Int?, height: Int?): ByteArray? {
+        val queryCondition = generateQueryCondition(albumId, MediaStore.Images.Media.BUCKET_ID, mediumSubtype, MediaStore.Images.Media.MIME_TYPE)
+        val selectionConditions = queryCondition[0]
+        val selection = if (selectionConditions.count() > 0) selectionConditions.joinToString(separator = " AND ") else null
+        val selectionArgs = queryCondition[1].toTypedArray()
         return this.context?.run {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Images.Media._ID),
-                if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
-                null,
+                selection,
+                selectionArgs,
                 MediaStore.Images.Media.DATE_TAKEN + " DESC LIMIT 1"
             )
             imageCursor?.use { cursor ->
@@ -498,13 +536,17 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoAlbumThubnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getVideoAlbumThumbnail(albumId: String, mediumSubtype: String?, width: Int?, height: Int?): ByteArray? {
+        val queryCondition = generateQueryCondition(albumId, MediaStore.Video.Media.BUCKET_ID, mediumSubtype, MediaStore.Video.Media.MIME_TYPE)
+        val selectionConditions = queryCondition[0]
+        val selection = if (selectionConditions.count() > 0) selectionConditions.joinToString(separator = " AND ") else null
+        val selectionArgs = queryCondition[1].toTypedArray()
         return this.context?.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Video.Media._ID),
-                if (albumId == allAlbumId) null else "${MediaStore.Video.Media.BUCKET_ID} = $albumId",
-                null,
+                selection,
+                selectionArgs,
                 MediaStore.Video.Media.DATE_TAKEN + " DESC LIMIT 1"
             )
             videoCursor?.use { cursor ->
