@@ -9,6 +9,10 @@ class Album {
   /// The [MediumType] of the album.
   final MediumType mediumType;
 
+
+    /// The [MediumSubtype] of the album.
+  final MediumSubtype mediumSubtype;
+
   /// The name of the album.
   final String name;
 
@@ -22,6 +26,7 @@ class Album {
   Album.fromJson(dynamic json)
       : id = json['id'],
         mediumType = jsonToMediumType(json['mediumType']),
+        mediumSubtype= jsonToMediumSubtype(json['mediumSubtype']),
         name = json['name'],
         count = json['count'];
 
@@ -52,6 +57,7 @@ class Album {
     return PhotoGallery.getAlbumThumbnail(
       albumId: id,
       mediumType: this.mediumType,
+      mediumSubtype: this.mediumSubtype,
       width: width,
       height: height,
       highQuality: highQuality,

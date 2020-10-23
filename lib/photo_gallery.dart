@@ -24,10 +24,12 @@ class PhotoGallery {
   /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
     @required MediumType mediumType,
+    MediumSubtype mediumSubtype
   }) async {
     assert(mediumType != null);
     final json = await _channel.invokeMethod('listAlbums', {
       'mediumType': mediumTypeToJson(mediumType),
+      'mediumSubtype': mediumSubtypeToJson(mediumSubtype)
     });
     return json.map<Album>((x) => Album.fromJson(x)).toList();
   }
@@ -43,6 +45,7 @@ class PhotoGallery {
     final json = await _channel.invokeMethod('listMedia', {
       'albumId': album.id,
       'mediumType': mediumTypeToJson(album.mediumType),
+      'mediumSubtype': mediumSubtypeToJson(album.mediumSubtype),
       'total': total,
       'skip': skip,
       'take': take,
@@ -86,6 +89,7 @@ class PhotoGallery {
   static Future<List<dynamic>> getAlbumThumbnail({
     @required String albumId,
     MediumType mediumType,
+    MediumSubtype mediumSubtype,
     int width,
     int height,
     bool highQuality,
@@ -94,6 +98,7 @@ class PhotoGallery {
     final bytes = await _channel.invokeMethod('getAlbumThumbnail', {
       'albumId': albumId,
       'mediumType': mediumTypeToJson(mediumType),
+      'mediumSubtype': mediumSubtypeToJson(mediumSubtype),
       'width': width,
       'height': height,
       'highQuality': highQuality,

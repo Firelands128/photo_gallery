@@ -30,13 +30,16 @@ MediumType jsonToMediumType(String value) {
 
 
 enum MediumSubtype {
-  phoneLive
+  iOSPhoneLive,
+  androidGif
 }
 
 String mediumSubtypeToJson(MediumSubtype value) {
   switch (value) {
-    case MediumSubtype.phoneLive:
+    case MediumSubtype.iOSPhoneLive:
       return 'phoneLive';
+    case MediumSubtype.androidGif:
+      return 'gif';
     default:
       return null;
   }
@@ -45,7 +48,9 @@ String mediumSubtypeToJson(MediumSubtype value) {
 MediumSubtype jsonToMediumSubtype(String value) {
   switch (value) {
     case 'phoneLive':
-      return MediumSubtype.phoneLive;
+      return MediumSubtype.iOSPhoneLive;
+    case 'gif':
+      return MediumSubtype.androidGif;
     default:
       return null;
   }

@@ -5,6 +5,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   const AlbumThumbnailProvider({
     @required this.albumId,
     this.mediumType,
+    this.mediumSubtype,
     this.height,
     this.width,
     this.highQuality = false,
@@ -12,6 +13,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
 
   final String albumId;
   final MediumType mediumType;
+  final MediumSubtype mediumSubtype;
   final int height;
   final int width;
   final bool highQuality;
@@ -33,6 +35,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
     final bytes = await PhotoGallery.getAlbumThumbnail(
       albumId: albumId,
       mediumType: mediumType,
+      mediumSubtype: mediumSubtype,
       height: height,
       width: width,
       highQuality: highQuality,
