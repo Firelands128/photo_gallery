@@ -167,6 +167,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun listImageAlbums(mediumSubtype: String?): List<Map<String, Any>> {
+
+        val queryCondition = generateAlbumQueryCondition(mediumSubtype, MediaStore.Images.Media.MIME_TYPE)
+        val selectionConditions = queryCondition[0]
+        val selection = if (selectionConditions.count() > 0) selectionConditions.joinToString(separator = " AND ") else null
+        val selectionArgs = queryCondition[1].toTypedArray()
         this.context?.run {
             var total = 0
             val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
@@ -179,8 +184,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 imageProjection,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 null
             )
 
@@ -196,6 +201,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         albumHashMap[bucketId] = mutableMapOf(
                             "id" to bucketId,
                             "mediumType" to imageType,
+                            "mediumSubtype" to (mediumSubtype ?: ""),
                             "name" to folderName,
                             "count" to 1
                         )
@@ -212,6 +218,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 mapOf(
                     "id" to allAlbumId,
                     "mediumType" to imageType,
+                    "mediumSubtype" to (mediumSubtype ?: ""),
                     "name" to allAlbumName,
                     "count" to total
                 )
@@ -223,6 +230,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun listVideoAlbums(mediumSubtype: String?): List<Map<String, Any>> {
+
+        val queryCondition = generateAlbumQueryCondition(mediumSubtype, MediaStore.Video.Media.MIME_TYPE)
+        val selectionConditions = queryCondition[0]
+        val selection = if (selectionConditions.count() > 0) selectionConditions.joinToString(separator = " AND ") else null
+        val selectionArgs = queryCondition[1].toTypedArray()
+
         this.context?.run {
             var total = 0
             val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
@@ -235,8 +248,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 videoProjection,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 null
             )
 
@@ -252,6 +265,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         albumHashMap[bucketId] = mutableMapOf(
                             "id" to bucketId,
                             "mediumType" to videoType,
+                            "mediumSubtype" to (mediumSubtype ?: ""),
                             "name" to folderName,
                             "count" to 1
                         )
@@ -267,12 +281,28 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             albumList.add(mapOf(
                 "id" to allAlbumId,
                 "mediumType" to videoType,
+                "mediumSubtype" to (mediumSubtype ?: ""),
                 "name" to allAlbumName,
                 "count" to total))
             albumList.addAll(albumHashMap.values)
             return albumList
         }
         return listOf()
+    }
+
+    private fun generateAlbumQueryCondition(
+                                        mediumSubtype: String?,
+                                        mimeTypeKey : String = MediaStore.Images.Media.MIME_TYPE): Array<MutableList<String>>  {
+        var selectionConditions = mutableListOf<String>()
+        var selectionArgs = mutableListOf<String>()
+        if (mediumSubtype != null) {
+            val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(mediumSubtype)
+            if (mimeType != null) {
+                selectionConditions.add(element = "${mimeTypeKey} = ?")
+                selectionArgs.add(element = mimeType)
+            }
+        }
+        return arrayOf(selectionConditions, selectionArgs)
     }
 
     private fun listImages(albumId: String, total: Int, skip: Int?, take: Int?, mediumSubtype: String?): Map<String, Any> {
@@ -347,13 +377,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         var selectionConditions = mutableListOf<String>()
         var selectionArgs = mutableListOf<String>()
         if (albumId != allAlbumId) {
-            selectionConditions.add(element = "${buckIDKey} = ?")
+            selectionConditions.add(element = "$buckIDKey = ?")
             selectionArgs.add(element = albumId)
         }
         if (mediumSubtype != null) {
             val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(mediumSubtype)
             if (mimeType != null) {
-                selectionConditions.add(element = "${MediaStore.Images.Media.MIME_TYPE} = ?")
+                selectionConditions.add(element = "$mimeTypeKey = ?")
                 selectionArgs.add(element = mimeType)
             }
         }
