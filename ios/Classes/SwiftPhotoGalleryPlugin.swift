@@ -79,6 +79,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           result(filepath?.replacingOccurrences(of: "file://", with: ""))
       })
     }
+    else if(call.method == "clear") {
+      clearRootExportPath()
+      result("")
+    }
     else {
       result(FlutterMethodNotImplemented)
     }
