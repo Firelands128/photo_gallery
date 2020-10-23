@@ -137,9 +137,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       }
     }
     
+    let collectionSubType = toSwiftSmartAlbumSubtype(value: mediumSubtype)
     // Smart Albums.
     processPHAssetCollections(
-      fetchResult: PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .albumRegular, options: fetchOptions),
+      fetchResult: PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: collectionSubType, options: fetchOptions),
       hideIfEmpty: true
     )
     
@@ -445,10 +446,19 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
   }
   
-  private func toDartMediumSubtype(value: PHAssetMediaSubtype) -> String? {
+  private func toSwiftSmartAlbumSubtype(value: String?) -> PHAssetCollectionSubtype {
     switch value {
-    case PHAssetMediaSubtype.photoLive: return "photoLive"
-    default: return nil
+    case "photoLive": if #available(iOS 10.3, *) {
+      return PHAssetCollectionSubtype.smartAlbumLivePhotos
+    } else {
+      return PHAssetCollectionSubtype.smartAlbumGeneric
+    }
+    case "gif": if #available(iOS 11, *) {
+      return PHAssetCollectionSubtype.smartAlbumAnimated
+    } else {
+      return PHAssetCollectionSubtype.smartAlbumGeneric
+    }
+    default: return PHAssetCollectionSubtype.smartAlbumGeneric
     }
   }
   
