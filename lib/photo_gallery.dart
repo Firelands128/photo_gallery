@@ -102,14 +102,20 @@ class PhotoGallery {
   }
 
   /// get medium file by medium id
+  /// [raw]: return raw file data. Not configurable in Android, always true.
+  /// [autoExtension]: jpg image file if false, jpg/png/gif if true. . Not configurable in Android, always true.
   static Future<File> getFile({
     @required String mediumId,
     MediumType mediumType,
+    bool raw = false,
+    bool autoExtension = false
   }) async {
     assert(mediumId != null);
     final path = await _channel.invokeMethod('getFile', {
       'mediumId': mediumId,
       'mediumType': mediumTypeToJson(mediumType),
+      'raw': raw,
+      'autoExtension': autoExtension,
     }) as String;
     return File(path);
   }

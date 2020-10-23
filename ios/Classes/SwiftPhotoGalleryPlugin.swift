@@ -69,8 +69,12 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     else if(call.method == "getFile") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let mediumId = arguments["mediumId"] as! String
+      let raw = arguments["raw"] as? Bool
+      let autoExtension = arguments["autoExtension"] as? Bool
       getFile(
         mediumId: mediumId,
+        raw: raw ?? false,
+        autoExtension: autoExtension ?? false,
         completion: { (filepath: String?, error: Error?) -> Void in
           result(filepath?.replacingOccurrences(of: "file://", with: ""))
       })
@@ -307,7 +311,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     completion(nil , NSError(domain: "photo_gallery", code: 404, userInfo: nil))
   }
   
-  private func getFile(mediumId: String, completion: @escaping (String?, Error?) -> Void) {
+  private func getFile(mediumId: String, raw: Bool, autoExtension: Bool, completion: @escaping (String?, Error?) -> Void) {
     let manager = PHImageManager.default()
     
     let fetchOptions = PHFetchOptions()
@@ -334,13 +338,27 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
                 completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
               }
-              guard let jpgData = self.convertToJpeg(originalData: originalData) else {
-                completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
-                return
+              var dataToWrite: Data
+              var fileExt: String
+              if raw {
+                dataToWrite = originalData
+                fileExt = ""
+              } else {
+                let dataUTType = self.toSwiftImageUTType(data: originalData)
+                fileExt = self.toImageFileExtension(utType: dataUTType)
+                if (dataUTType == kUTTypeGIF as String) {
+                  dataToWrite = originalData
+                } else {
+                  guard let imageData = self.convertToImageData(originalData: originalData, utType: dataUTType) else {
+                    completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
+                    return
+                  }
+                  dataToWrite = imageData
+                }
               }
               // Writing to file
-              let filepath = self.exportPathForAsset(asset: asset, ext: ".jpg")
-              try! jpgData.write(to: filepath, options: .atomic)
+              let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
+              try! dataToWrite.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             })
         })
@@ -369,9 +387,26 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   }
   
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
+    
+    var imageAnimated = false
+    if #available(iOS 11, *) {
+      if asset.playbackStyle == .imageAnimated {
+        imageAnimated = true
+      }
+    } else {
+      if let identifier = asset.value(forKey: "uniformTypeIdentifier") as? String
+      {
+        if identifier == kUTTypeGIF as String
+        {
+          imageAnimated = true
+        }
+      }
+    }
+    
     return [
       "id": asset.localIdentifier,
       "mediumType": toDartMediumType(value: asset.mediaType),
+      "imageAnimated": imageAnimated,
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
       "duration": NSInteger(asset.duration * 1000),
@@ -380,17 +415,24 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     ]
   }
   
-  /// Converts to JPEG, and keep EXIF data.
-  private func convertToJpeg(originalData: Data) -> Data? {
-    guard let image: UIImage = UIImage(data: originalData) else { return nil }
+  /// Converts to JPEG/PNG/GIF, and keep EXIF data.
+  private func convertToImageData(originalData: Data, utType: String) -> Data? {
     
     let originalSrc = CGImageSourceCreateWithData(originalData as CFData, nil)!
     let options = [kCGImageSourceShouldCache as String: kCFBooleanFalse]
     let originalMetadata = CGImageSourceCopyPropertiesAtIndex(originalSrc, 0, options as CFDictionary)
     
-    guard let jpeg = image.jpegData(compressionQuality: 1.0) else { return nil }
+    var compressedImageData: Data?
+    if (utType == kUTTypePNG as String) {
+      guard let image: UIImage = UIImage(data: originalData) else { return nil }
+      compressedImageData = image.pngData()
+    } else {
+      guard let image: UIImage = UIImage(data: originalData) else { return nil }
+      compressedImageData = image.jpegData(compressionQuality: 1.0)
+    }
+    guard let imageData = compressedImageData else { return nil }
     
-    let src = CGImageSourceCreateWithData(jpeg as CFData, nil)!
+    let src = CGImageSourceCreateWithData(imageData as CFData, nil)!
     let data = NSMutableData()
     let uti = CGImageSourceGetType(src)!
     let dest = CGImageDestinationCreateWithData(data as CFMutableData, uti, 1, nil)!
@@ -400,17 +442,54 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return data as Data
   }
   
+  private func rootExportPath() -> URL {
+    let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+    let cacheFolder = paths[0].appendingPathComponent("photo_gallery")
+    try! FileManager.default.createDirectory(at: cacheFolder, withIntermediateDirectories: true, attributes: nil)
+    return cacheFolder;
+  }
+  
+  private func clearRootExportPath() {
+    try! FileManager.default.removeItem(atPath: rootExportPath().absoluteString)
+  }
   
   private func exportPathForAsset(asset: PHAsset, ext: String) -> URL {
     let mediumId = asset.localIdentifier
       .replacingOccurrences(of: "/", with: "__")
       .replacingOccurrences(of: "\\", with: "__")
-    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-    let tempFolder = paths[0].appendingPathComponent("photo_gallery")
-    try! FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true, attributes: nil)
-    
-    return tempFolder.appendingPathComponent(mediumId+ext)
+    return rootExportPath().appendingPathComponent(mediumId+ext)
   }
+  
+  private func toSwiftImageUTType(data: Data) -> String {
+    var values = [UInt8](repeating:0, count:1)
+    data.copyBytes(to: &values, count: 1)
+
+    let ext: String
+    switch (values[0]) {
+    case 0xFF:
+      ext = kUTTypeJPEG as String
+    case 0x89:
+        ext = kUTTypePNG as String
+    case 0x47:
+        ext = kUTTypeGIF as String
+    default:
+        ext = kUTTypeJPEG as String
+    }
+    return ext
+  }
+  
+  private func toImageFileExtension(utType: String) -> String {
+    var ext: String = ".jpg"
+    if (utType == kUTTypeJPEG as String) {
+      ext = ".jpg"
+    } else if (utType == kUTTypePNG as String) {
+      ext = ".png"
+    } else if (utType == kUTTypeGIF as String) {
+      ext = ".gif"
+    }
+    return ext
+  }
+  
   
   private func toSwiftMediumType(value: String) -> PHAssetMediaType? {
     switch value {
