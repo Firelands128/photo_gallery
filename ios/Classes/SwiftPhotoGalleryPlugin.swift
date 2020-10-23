@@ -378,7 +378,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
             do {
               let avAsset = avAsset as? AVURLAsset
               let data = try Data(contentsOf: avAsset!.url)
-              let filepath = self.exportPathForAsset(asset: asset, ext: ".mov")
+              var fileExtenstion = ".mov"
+              if let uniformTypeIdentifier = self.uniformTypeIdentifierOf(asset: asset) {
+                if let ext = UTTypeCopyPreferredTagWithClass(uniformTypeIdentifier as CFString, kUTTagClassFilenameExtension as CFString)?.takeRetainedValue() as String? {
+                  fileExtenstion = ext
+                }
+              }
+              let filepath = self.exportPathForAsset(asset: asset, ext: fileExtenstion)
               try! data.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             } catch {
@@ -394,17 +400,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     
     var mimeType: String?
     var assetUTI: String?
-    var uniformTypeIdentifier: String?
-
-    if #available(iOS 9, *) {
-      let resourceList = PHAssetResource.assetResources(for: asset)
-      if let resource = resourceList.first {
-        uniformTypeIdentifier = resource.uniformTypeIdentifier
-      }
-    } else {
-      uniformTypeIdentifier = asset.value(forKey: "uniformTypeIdentifier") as? String
-    }
-    if let uniformTypeIdentifier = uniformTypeIdentifier {
+    if let uniformTypeIdentifier = uniformTypeIdentifierOf(asset: asset) {
       mimeType = UTTypeCopyPreferredTagWithClass(uniformTypeIdentifier as CFString, kUTTagClassMIMEType as CFString)?.takeRetainedValue() as String?
       assetUTI = uniformTypeIdentifier
     }
@@ -419,6 +415,16 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
+  }
+  
+  private func uniformTypeIdentifierOf(asset: PHAsset) -> String? {
+    if #available(iOS 9, *) {
+      let resourceList = PHAssetResource.assetResources(for: asset)
+      if let resource = resourceList.first {
+        return resource.uniformTypeIdentifier
+      }
+    }
+    return asset.value(forKey: "uniformTypeIdentifier") as? String
   }
   
   /// Converts to JPEG/PNG/GIF, and keep EXIF data.
