@@ -121,7 +121,7 @@ class PhotoGallery {
     return File(path);
   }
 
-  static Future<Void> clear() async {
-    return _channel.invokeMethod('clear', {});
+  static Future<void> clear() async {
+    _channel.invokeMethod('clear', {});
   }
 }
