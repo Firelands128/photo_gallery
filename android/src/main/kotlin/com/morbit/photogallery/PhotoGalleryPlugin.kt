@@ -277,13 +277,58 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val limit = take ?: (total - offset)
 
         this.context?.run {
-            val imageCursor = this.contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                imageMetadataProjection,
-                if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
-                null,
-                "$imageOrderBy LIMIT $limit OFFSET $offset"
-            )
+
+            var imageCursor: Cursor? = null
+
+            /**
+             * Change the way to fetch Media Store
+             */
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Get All data in Cursor by sorting in DESC order
+                imageCursor = this.contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    imageMetadataProjection,
+                    android.os.Bundle().apply {
+                        // Limit & Offset
+                        putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit)
+                        putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, offset)
+                        // Sort function
+                        putStringArray(
+                                android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                                arrayOf(
+                                    MediaStore.Images.Media.DATE_TAKEN,
+                                    MediaStore.Images.Media.DATE_MODIFIED
+                                )
+                        )
+                        putIntArray(
+                                android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                                intArrayOf(
+                                        android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
+                                        android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                                )
+                        )
+                        // Selection
+                        if (albumId != allAlbumId) {
+                            putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, "${MediaStore.Images.Media.BUCKET_ID} = ?")
+                            putStringArray(
+                                    android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                                    arrayOf(
+                                        albumId.toString()
+                                    )
+                            )
+                        }
+                    },
+                        null
+                )
+            } else {
+                imageCursor = this.contentResolver.query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        imageMetadataProjection,
+                        if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
+                        null,
+                        "$imageOrderBy LIMIT $limit OFFSET $offset"
+                )
+            }
 
             imageCursor?.use { cursor ->
                 while (cursor.moveToNext()) {
