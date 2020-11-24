@@ -161,7 +161,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       return PHAsset.fetchAssets(with: options).count
     }
     
-    return PHAsset.fetchAssets(in: collection!, options: options).count
+    return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
   private func listMedia(albumId: String, skip: NSNumber?, take: NSNumber?, mediumType: String) -> NSDictionary {
@@ -175,7 +175,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     
     let fetchResult = albumId == "__ALL__"
       ? PHAsset.fetchAssets(with: fetchOptions)
-      : PHAsset.fetchAssets(in: collection!, options: fetchOptions)
+      : PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: fetchOptions)
     let start = skip?.intValue ?? 0
     let total = fetchResult.count
     let end = take == nil ? total : min(start + take!.intValue, total)
