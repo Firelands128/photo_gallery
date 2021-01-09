@@ -161,7 +161,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       return PHAsset.fetchAssets(with: options).count
     }
     
-    return PHAsset.fetchAssets(in: collection!, options: options).count
+    return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
   private func listMedia(albumId: String, skip: NSNumber?, take: NSNumber?, mediumType: String) -> NSDictionary {
@@ -175,7 +175,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     
     let fetchResult = albumId == "__ALL__"
       ? PHAsset.fetchAssets(with: fetchOptions)
-      : PHAsset.fetchAssets(in: collection!, options: fetchOptions)
+      : PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: fetchOptions)
     let start = skip?.intValue ?? 0
     let total = fetchResult.count
     let end = take == nil ? total : min(start + take!.intValue, total)
@@ -409,7 +409,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let tempFolder = paths[0].appendingPathComponent("photo_gallery")
     try! FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true, attributes: nil)
     
-    return paths[0].appendingPathComponent(mediumId+ext)
+    return tempFolder.appendingPathComponent(mediumId+ext)
   }
   
   private func toSwiftMediumType(value: String) -> PHAssetMediaType? {
