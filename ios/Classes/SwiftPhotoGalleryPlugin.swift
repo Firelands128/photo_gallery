@@ -409,7 +409,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let tempFolder = paths[0].appendingPathComponent("photo_gallery")
     try! FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true, attributes: nil)
     
-    return paths[0].appendingPathComponent(mediumId+ext)
+    return tempFolder.appendingPathComponent(mediumId+ext)
   }
   
   private func toSwiftMediumType(value: String) -> PHAssetMediaType? {
