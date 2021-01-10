@@ -75,6 +75,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           result(filepath?.replacingOccurrences(of: "file://", with: ""))
       })
     }
+    else if(call.method == "cleanCache") {
+      cleanCache()
+      result(nil)
+    }
     else {
       result(FlutterMethodNotImplemented)
     }
@@ -387,11 +391,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let mediumId = asset.localIdentifier
       .replacingOccurrences(of: "/", with: "__")
       .replacingOccurrences(of: "\\", with: "__")
-    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-    let tempFolder = paths[0].appendingPathComponent("photo_gallery")
-    try! FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true, attributes: nil)
-    
-    return tempFolder.appendingPathComponent(mediumId+ext)
+    let cachePath = self.cachePath()
+    return cachePath.appendingPathComponent(mediumId + ext)
   }
   
   private func toSwiftMediumType(value: String) -> PHAssetMediaType? {
@@ -447,5 +448,16 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func extractFileExtensionFromAsset(asset: PHAsset) -> String {
     let uti = self.extractUTIFromAsset(asset: asset)
     return self.extractFileExtensionFromUTI(uti: uti)
+  }
+  
+  private func cachePath() -> URL {
+    let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+    let cacheFolder = paths[0].appendingPathComponent("photo_gallery")
+    try! FileManager.default.createDirectory(at: cacheFolder, withIntermediateDirectories: true, attributes: nil)
+    return cacheFolder
+  }
+  
+  private func cleanCache() {
+    try? FileManager.default.removeItem(at: self.cachePath())
   }
 }

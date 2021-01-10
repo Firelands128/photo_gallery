@@ -10,6 +10,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import android.graphics.Bitmap
 import java.io.ByteArrayOutputStream
+import java.io.File
 import android.provider.MediaStore
 import android.content.Context
 import android.database.Cursor
@@ -139,6 +140,10 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 }, { v ->
                     result.success(v)
                 })
+            }
+            "cleanCache" -> {
+                cleanCache()
+                result.success(null)
             }
             else -> result.notImplemented()
         }
@@ -637,6 +642,21 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "creationDate" to dateTaken,
             "modifiedDate" to dateModified
         )
+    }
+
+    private fun getCachePath(): File? {
+        return this.context?.run {
+            val cachePath = File(this.cacheDir, "photo_gallery")
+            if (!cachePath.exists()) {
+                cachePath.mkdirs()
+            }
+            return@run cachePath
+        }
+    }
+
+    private fun cleanCache() {
+        val cachePath = getCachePath()
+        cachePath?.deleteRecursively()
     }
 }
 

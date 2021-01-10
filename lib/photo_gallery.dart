@@ -113,4 +113,8 @@ class PhotoGallery {
     }) as String;
     return File(path);
   }
+
+  static Future<void> cleanCache() async {
+    _channel.invokeMethod('cleanCache', {});
+  }
 }
