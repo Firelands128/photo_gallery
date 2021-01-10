@@ -330,17 +330,17 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           options: options,
           resultHandler: { (data: Data?, uti: String?, orientation, info) in
             DispatchQueue.main.async(execute: {
-              guard let originalData = data else {
+              guard let imageData = data else {
                 completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
               }
-              guard let jpgData = self.convertToJpeg(originalData: originalData) else {
-                completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
+              guard let assetUTI = uti else {
+                completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
               }
-              // Writing to file
-              let filepath = self.exportPathForAsset(asset: asset, ext: ".jpg")
-              try! jpgData.write(to: filepath, options: .atomic)
+              let fileExt = self.toFileExtension(uti: assetUTI)
+              let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
+              try! imageData.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             })
         })
@@ -379,28 +379,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
   }
-  
-  /// Converts to JPEG, and keep EXIF data.
-  private func convertToJpeg(originalData: Data) -> Data? {
-    guard let image: UIImage = UIImage(data: originalData) else { return nil }
-    
-    let originalSrc = CGImageSourceCreateWithData(originalData as CFData, nil)!
-    let options = [kCGImageSourceShouldCache as String: kCFBooleanFalse]
-    let originalMetadata = CGImageSourceCopyPropertiesAtIndex(originalSrc, 0, options as CFDictionary)
-    
-    guard let jpeg = image.jpegData(compressionQuality: 1.0) else { return nil }
-    
-    let src = CGImageSourceCreateWithData(jpeg as CFData, nil)!
-    let data = NSMutableData()
-    let uti = CGImageSourceGetType(src)!
-    let dest = CGImageDestinationCreateWithData(data as CFMutableData, uti, 1, nil)!
-    CGImageDestinationAddImageFromSource(dest, src, 0, originalMetadata)
-    if !CGImageDestinationFinalize(dest) { return nil }
-    
-    return data as Data
-  }
-  
-  
+
   private func exportPathForAsset(asset: PHAsset, ext: String) -> URL {
     let mediumId = asset.localIdentifier
       .replacingOccurrences(of: "/", with: "__")
@@ -440,5 +419,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func predicateFromMediumType(mediumType: String) -> NSPredicate {
     let swiftType = toSwiftMediumType(value: mediumType)
     return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
+  }
+
+  private func toFileExtension(uti: String) -> String {
+    if let ext = UTTypeCopyPreferredTagWithClass(uti as CFString, kUTTagClassFilenameExtension as CFString)?.takeRetainedValue() as String? {
+      return ext
+    } else {
+      return ""
+    }
   }
 }
