@@ -338,12 +338,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
                 completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
               }
-              let fileExt = self.toFileExtension(uti: assetUTI)
+              let fileExt = self.extractFileExtensionFromUTI(uti: assetUTI)
               let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
               try! imageData.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             })
-        })
+          }
+        )
       } else if(asset.mediaType == PHAssetMediaType.video
         || asset.mediaType == PHAssetMediaType.audio) {
         let options = PHVideoRequestOptions()
@@ -356,14 +357,16 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
             do {
               let avAsset = avAsset as? AVURLAsset
               let data = try Data(contentsOf: avAsset!.url)
-              let filepath = self.exportPathForAsset(asset: asset, ext: ".mov")
+              let fileExt = self.extractFileExtensionFromAsset(asset: asset)
+              let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
               try! data.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             } catch {
               completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
             }
           })
-        })
+          }
+        )
       }
     }
   }
@@ -421,11 +424,28 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
   }
 
-  private func toFileExtension(uti: String) -> String {
-    if let ext = UTTypeCopyPreferredTagWithClass(uti as CFString, kUTTagClassFilenameExtension as CFString)?.takeRetainedValue() as String? {
-      return ext
-    } else {
+  private func extractFileExtensionFromUTI(uti: String?) -> String {
+    guard let assetUTI = uti else {
       return ""
     }
+    guard let ext = UTTypeCopyPreferredTagWithClass(assetUTI as CFString, kUTTagClassFilenameExtension as CFString)?.takeRetainedValue() as String? else {
+      return ""
+    }
+    return "." + ext
+  }
+  
+  private func extractUTIFromAsset(asset: PHAsset) -> String? {
+    if #available(iOS 9, *) {
+      let resourceList = PHAssetResource.assetResources(for: asset)
+      if let resource = resourceList.first {
+        return resource.uniformTypeIdentifier
+      }
+    }
+    return asset.value(forKey: "uniformTypeIdentifier") as? String
+  }
+  
+  private func extractFileExtensionFromAsset(asset: PHAsset) -> String {
+    let uti = self.extractUTIFromAsset(asset: asset)
+    return self.extractFileExtensionFromUTI(uti: uti)
   }
 }
