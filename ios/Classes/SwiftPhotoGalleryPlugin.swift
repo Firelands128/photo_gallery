@@ -376,9 +376,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   }
   
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
+    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     return [
       "id": asset.localIdentifier,
       "mediumType": toDartMediumType(value: asset.mediaType),
+      "mimeType": mimeType,
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
       "duration": NSInteger(asset.duration * 1000),
@@ -435,6 +437,16 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return "." + ext
   }
   
+  private func extractMimeTypeFromUTI(uti: String?) -> String? {
+    guard let assetUTI = uti else {
+      return nil
+    }
+    guard let mimeType = UTTypeCopyPreferredTagWithClass(assetUTI as CFString, kUTTagClassMIMEType as CFString)?.takeRetainedValue() as String? else {
+      return nil
+    }
+    return mimeType
+  }
+  
   private func extractUTIFromAsset(asset: PHAsset) -> String? {
     if #available(iOS 9, *) {
       let resourceList = PHAssetResource.assetResources(for: asset)
@@ -448,6 +460,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func extractFileExtensionFromAsset(asset: PHAsset) -> String {
     let uti = self.extractUTIFromAsset(asset: asset)
     return self.extractFileExtensionFromUTI(uti: uti)
+  }
+  
+  private func extractMimeTypeFromAsset(asset: PHAsset) -> String? {
+    let uti = self.extractUTIFromAsset(asset: asset)
+    return self.extractMimeTypeFromUTI(uti: uti)
   }
   
   private func cachePath() -> URL {
