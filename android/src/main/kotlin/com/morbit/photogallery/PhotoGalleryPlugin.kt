@@ -465,19 +465,19 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun getAlbumThumbnail(albumId: String, mediumType: String?, width: Int?, height: Int?): ByteArray? {
         return when (mediumType) {
             imageType -> {
-                getImageAlbumThubnail(albumId, width, height)
+                getImageAlbumThumbnail(albumId, width, height)
             }
             videoType -> {
-                getVideoAlbumThubnail(albumId, width, height)
+                getVideoAlbumThumbnail(albumId, width, height)
             }
             else -> {
-                getImageAlbumThubnail(albumId, width, height)
-                    ?: getVideoAlbumThubnail(albumId, width, height)
+                getImageAlbumThumbnail(albumId, width, height)
+                    ?: getVideoAlbumThumbnail(albumId, width, height)
             }
         }
     }
 
-    private fun getImageAlbumThubnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getImageAlbumThumbnail(albumId: String, width: Int?, height: Int?): ByteArray? {
         return this.context?.run {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -498,7 +498,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoAlbumThubnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getVideoAlbumThumbnail(albumId: String, width: Int?, height: Int?): ByteArray? {
         return this.context?.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
