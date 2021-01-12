@@ -1,3 +1,17 @@
+## 0.4.0
+
+Add ```cleanCache``` api to clean the cache directory.
+
+Add ```mimeType``` attribute of ```Medium```.
+
+Add alternative media query syntax to support Android 11.
+
+Cache original image data to a cached file and keep original medium file extension in iOS.
+
+Fix a problem of collection possibly be nil.
+
+Update .gitignore file.
+
 ## 0.3.0
 
 Force ```getFile``` to use high quality format for videos in iOS platform.
