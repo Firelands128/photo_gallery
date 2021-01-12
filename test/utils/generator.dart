@@ -61,7 +61,10 @@ class Generator {
       "mediumType": mediumTypeToJson(mediumType),
       "width": 512,
       "height": 512,
+      "mimeType": "image/jpeg",
+      "duration": 3600,
       "creationDate": DateTime(2020, 8, 1).millisecondsSinceEpoch,
+      "modifiedDate": DateTime(2020, 9, 1).millisecondsSinceEpoch,
     };
   }
 
