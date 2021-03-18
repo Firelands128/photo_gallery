@@ -3,18 +3,18 @@ part of photogallery;
 /// Fetches the given medium thumbnail from the gallery.
 class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
   const ThumbnailProvider({
-    @required this.mediumId,
+    required this.mediumId,
     this.mediumType,
     this.height,
     this.width,
     this.highQuality,
-  }) : assert(mediumId != null);
+  });
 
   final String mediumId;
-  final MediumType mediumType;
-  final int height;
-  final int width;
-  final bool highQuality;
+  final MediumType? mediumType;
+  final int? height;
+  final int? width;
+  final bool? highQuality;
 
   @override
   ImageStreamCompleter load(key, decode) {
@@ -37,9 +37,7 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
       width: width,
       highQuality: highQuality,
     );
-    if (bytes.length == 0) return null;
-
-    return await decode(bytes);
+    return await decode(Uint8List.fromList(bytes));
   }
 
   @override
@@ -55,7 +53,7 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
   }
 
   @override
-  int get hashCode => mediumId?.hashCode ?? 0;
+  int get hashCode => mediumId.hashCode;
 
   @override
   String toString() => '$runtimeType("$mediumId")';

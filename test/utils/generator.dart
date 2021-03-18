@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:photo_gallery/photo_gallery.dart';
 
 class Generator {
-  static dynamic generateAlbumsJson({MediumType mediumType}) {
-    mediumType = mediumType ?? MediumType.image;
+  static dynamic generateAlbumsJson({MediumType mediumType = MediumType.image}) {
     return [
       {
         "id": "__ALL__",
@@ -21,18 +20,18 @@ class Generator {
     ];
   }
 
-  static List<Album> generateAlbums({MediumType mediumType}) {
+  static List<Album> generateAlbums({required MediumType mediumType}) {
     return Generator.generateAlbumsJson(mediumType: mediumType)
         .map<Album>((x) => Album.fromJson(x))
         .toList();
   }
 
   static dynamic generateMediaPageJson({
-    String albumId,
-    MediumType mediumType,
-    int total,
-    int skip,
-    int take,
+    required String albumId,
+    required MediumType mediumType,
+    required int total,
+    int? skip,
+    int? take,
   }) {
     skip = skip ?? 0;
     take = take ?? (total - skip);
@@ -53,8 +52,8 @@ class Generator {
   }
 
   static dynamic generateMediaJson({
-    String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    required MediumType mediumType,
   }) {
     return {
       "id": mediumId,
@@ -69,10 +68,10 @@ class Generator {
   }
 
   static MediaPage generateMediaPage({
-    Album album,
-    MediumType mediumType,
-    int skip,
-    int take,
+    required Album album,
+    required MediumType mediumType,
+    int? skip,
+    int? take,
   }) {
     dynamic json = generateMediaPageJson(
       albumId: album.id,
@@ -85,8 +84,8 @@ class Generator {
   }
 
   static Medium generateMedia({
-    String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    required MediumType mediumType,
   }) {
     return Medium.fromJson(
       generateMediaJson(mediumId: mediumId, mediumType: mediumType),
@@ -94,28 +93,28 @@ class Generator {
   }
 
   static List<int> generateMockThumbnail({
-    String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    required MediumType mediumType,
   }) {
     return [1, 2, 3, 4, 5, 6, 7, 8, 9];
   }
 
   static List<int> generateMockAlbumThumbnail({
-    String albumId,
+    required String albumId,
   }) {
     return [1, 2, 3, 4, 5, 6, 7, 8, 9];
   }
 
   static String generateFilePath({
-    String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    required MediumType mediumType,
   }) {
     return "/path/to/file";
   }
 
   static File generateFile({
-    String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    required MediumType mediumType,
   }) {
     return File(generateFilePath(mediumId: mediumId, mediumType: mediumType));
   }

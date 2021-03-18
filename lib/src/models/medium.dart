@@ -9,33 +9,33 @@ class Medium {
   final String id;
 
   /// The medium type.
-  final MediumType mediumType;
+  final MediumType? mediumType;
 
   /// The medium width.
-  final int width;
+  final int? width;
 
   /// The medium height.
-  final int height;
+  final int? height;
 
   /// The medium mimeType.
-  final String mimeType;
+  final String? mimeType;
 
   /// The duration of video
   final int duration;
 
   /// The date at which the photo or video was taken.
-  final DateTime creationDate;
+  final DateTime? creationDate;
 
   /// The date at which the photo or video was modified.
-  final DateTime modifiedDate;
+  final DateTime? modifiedDate;
 
   Medium({
-    this.id,
+    required this.id,
     this.mediumType,
     this.width,
     this.height,
     this.mimeType,
-    this.duration,
+    this.duration = 0,
     this.creationDate,
     this.modifiedDate,
   });
@@ -81,9 +81,9 @@ class Medium {
 
   /// Get a JPEG thumbnail's data for this medium.
   Future<List<int>> getThumbnail({
-    int width,
-    int height,
-    bool highQuality = false,
+    int? width,
+    int? height,
+    bool? highQuality = false,
   }) {
     return PhotoGallery.getThumbnail(
       mediumId: id,

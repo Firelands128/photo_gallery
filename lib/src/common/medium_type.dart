@@ -6,7 +6,7 @@ enum MediumType {
   video,
 }
 
-String mediumTypeToJson(MediumType value) {
+String? mediumTypeToJson(MediumType? value) {
   switch (value) {
     case MediumType.image:
       return 'image';
@@ -17,7 +17,7 @@ String mediumTypeToJson(MediumType value) {
   }
 }
 
-MediumType jsonToMediumType(String value) {
+MediumType? jsonToMediumType(String? value) {
   switch (value) {
     case 'image':
       return MediumType.image;

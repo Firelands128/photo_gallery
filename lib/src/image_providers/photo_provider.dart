@@ -3,8 +3,8 @@ part of photogallery;
 /// Fetches the given image from the gallery.
 class PhotoProvider extends ImageProvider<PhotoProvider> {
   PhotoProvider({
-    @required this.mediumId,
-  }) : assert(mediumId != null);
+    required this.mediumId,
+  });
 
   final String mediumId;
 
@@ -23,10 +23,8 @@ class PhotoProvider extends ImageProvider<PhotoProvider> {
     assert(key == this);
     final file = await PhotoGallery.getFile(
         mediumId: mediumId, mediumType: MediumType.image);
-    if (file == null) return null;
 
     final bytes = await file.readAsBytes();
-    if (bytes.lengthInBytes == 0) return null;
 
     return await decode(bytes);
   }
@@ -44,7 +42,7 @@ class PhotoProvider extends ImageProvider<PhotoProvider> {
   }
 
   @override
-  int get hashCode => mediumId?.hashCode ?? 0;
+  int get hashCode => mediumId.hashCode;
 
   @override
   String toString() => '$runtimeType("$mediumId")';

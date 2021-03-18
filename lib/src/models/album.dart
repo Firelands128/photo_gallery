@@ -7,7 +7,7 @@ class Album {
   final String id;
 
   /// The [MediumType] of the album.
-  final MediumType mediumType;
+  final MediumType? mediumType;
 
   /// The name of the album.
   final String name;
@@ -30,8 +30,8 @@ class Album {
   /// Pagination can be controlled out of [skip] (defaults to `0`) and
   /// [take] (defaults to `<total>`).
   Future<MediaPage> listMedia({
-    int skip,
-    int take,
+    int? skip,
+    int? take,
   }) {
     return PhotoGallery._listMedia(
       album: this,
@@ -45,9 +45,9 @@ class Album {
   ///
   /// It will display the lastly taken medium thumbnail.
   Future<List<int>> getThumbnail({
-    int width,
-    int height,
-    bool highQuality = false,
+    int? width,
+    int? height,
+    bool? highQuality = false,
   }) {
     return PhotoGallery.getAlbumThumbnail(
       albumId: id,
