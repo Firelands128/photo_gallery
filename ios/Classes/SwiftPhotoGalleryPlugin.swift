@@ -75,6 +75,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           result(filepath?.replacingOccurrences(of: "file://", with: ""))
       })
     }
+    else if(call.method == "cleanCache") {
+      cleanCache()
+      result(nil)
+    }
     else {
       result(FlutterMethodNotImplemented)
     }
@@ -161,7 +165,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       return PHAsset.fetchAssets(with: options).count
     }
     
-    return PHAsset.fetchAssets(in: collection!, options: options).count
+    return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
   private func listMedia(albumId: String, skip: NSNumber?, take: NSNumber?, mediumType: String) -> NSDictionary {
@@ -175,7 +179,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     
     let fetchResult = albumId == "__ALL__"
       ? PHAsset.fetchAssets(with: fetchOptions)
-      : PHAsset.fetchAssets(in: collection!, options: fetchOptions)
+      : PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: fetchOptions)
     let start = skip?.intValue ?? 0
     let total = fetchResult.count
     let end = take == nil ? total : min(start + take!.intValue, total)
@@ -330,20 +334,21 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           options: options,
           resultHandler: { (data: Data?, uti: String?, orientation, info) in
             DispatchQueue.main.async(execute: {
-              guard let originalData = data else {
+              guard let imageData = data else {
                 completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
               }
-              guard let jpgData = self.convertToJpeg(originalData: originalData) else {
-                completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
+              guard let assetUTI = uti else {
+                completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
               }
-              // Writing to file
-              let filepath = self.exportPathForAsset(asset: asset, ext: ".jpg")
-              try! jpgData.write(to: filepath, options: .atomic)
+              let fileExt = self.extractFileExtensionFromUTI(uti: assetUTI)
+              let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
+              try! imageData.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             })
-        })
+          }
+        )
       } else if(asset.mediaType == PHAssetMediaType.video
         || asset.mediaType == PHAssetMediaType.audio) {
         let options = PHVideoRequestOptions()
@@ -356,22 +361,26 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
             do {
               let avAsset = avAsset as? AVURLAsset
               let data = try Data(contentsOf: avAsset!.url)
-              let filepath = self.exportPathForAsset(asset: asset, ext: ".mov")
+              let fileExt = self.extractFileExtensionFromAsset(asset: asset)
+              let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
               try! data.write(to: filepath, options: .atomic)
               completion(filepath.absoluteString, nil)
             } catch {
               completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
             }
           })
-        })
+          }
+        )
       }
     }
   }
   
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
+    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     return [
       "id": asset.localIdentifier,
       "mediumType": toDartMediumType(value: asset.mediaType),
+      "mimeType": mimeType,
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
       "duration": NSInteger(asset.duration * 1000),
@@ -379,37 +388,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
   }
-  
-  /// Converts to JPEG, and keep EXIF data.
-  private func convertToJpeg(originalData: Data) -> Data? {
-    guard let image: UIImage = UIImage(data: originalData) else { return nil }
-    
-    let originalSrc = CGImageSourceCreateWithData(originalData as CFData, nil)!
-    let options = [kCGImageSourceShouldCache as String: kCFBooleanFalse]
-    let originalMetadata = CGImageSourceCopyPropertiesAtIndex(originalSrc, 0, options as CFDictionary)
-    
-    guard let jpeg = image.jpegData(compressionQuality: 1.0) else { return nil }
-    
-    let src = CGImageSourceCreateWithData(jpeg as CFData, nil)!
-    let data = NSMutableData()
-    let uti = CGImageSourceGetType(src)!
-    let dest = CGImageDestinationCreateWithData(data as CFMutableData, uti, 1, nil)!
-    CGImageDestinationAddImageFromSource(dest, src, 0, originalMetadata)
-    if !CGImageDestinationFinalize(dest) { return nil }
-    
-    return data as Data
-  }
-  
-  
+
   private func exportPathForAsset(asset: PHAsset, ext: String) -> URL {
     let mediumId = asset.localIdentifier
       .replacingOccurrences(of: "/", with: "__")
       .replacingOccurrences(of: "\\", with: "__")
-    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-    let tempFolder = paths[0].appendingPathComponent("photo_gallery")
-    try! FileManager.default.createDirectory(at: tempFolder, withIntermediateDirectories: true, attributes: nil)
-    
-    return paths[0].appendingPathComponent(mediumId+ext)
+    let cachePath = self.cachePath()
+    return cachePath.appendingPathComponent(mediumId + ext)
   }
   
   private func toSwiftMediumType(value: String) -> PHAssetMediaType? {
@@ -440,5 +425,56 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func predicateFromMediumType(mediumType: String) -> NSPredicate {
     let swiftType = toSwiftMediumType(value: mediumType)
     return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
+  }
+
+  private func extractFileExtensionFromUTI(uti: String?) -> String {
+    guard let assetUTI = uti else {
+      return ""
+    }
+    guard let ext = UTTypeCopyPreferredTagWithClass(assetUTI as CFString, kUTTagClassFilenameExtension as CFString)?.takeRetainedValue() as String? else {
+      return ""
+    }
+    return "." + ext
+  }
+  
+  private func extractMimeTypeFromUTI(uti: String?) -> String? {
+    guard let assetUTI = uti else {
+      return nil
+    }
+    guard let mimeType = UTTypeCopyPreferredTagWithClass(assetUTI as CFString, kUTTagClassMIMEType as CFString)?.takeRetainedValue() as String? else {
+      return nil
+    }
+    return mimeType
+  }
+  
+  private func extractUTIFromAsset(asset: PHAsset) -> String? {
+    if #available(iOS 9, *) {
+      let resourceList = PHAssetResource.assetResources(for: asset)
+      if let resource = resourceList.first {
+        return resource.uniformTypeIdentifier
+      }
+    }
+    return asset.value(forKey: "uniformTypeIdentifier") as? String
+  }
+  
+  private func extractFileExtensionFromAsset(asset: PHAsset) -> String {
+    let uti = self.extractUTIFromAsset(asset: asset)
+    return self.extractFileExtensionFromUTI(uti: uti)
+  }
+  
+  private func extractMimeTypeFromAsset(asset: PHAsset) -> String? {
+    let uti = self.extractUTIFromAsset(asset: asset)
+    return self.extractMimeTypeFromUTI(uti: uti)
+  }
+  
+  private func cachePath() -> URL {
+    let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+    let cacheFolder = paths[0].appendingPathComponent("photo_gallery")
+    try! FileManager.default.createDirectory(at: cacheFolder, withIntermediateDirectories: true, attributes: nil)
+    return cacheFolder
+  }
+  
+  private func cleanCache() {
+    try? FileManager.default.removeItem(at: self.cachePath())
   }
 }

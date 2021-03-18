@@ -17,6 +17,9 @@ class Medium {
   /// The medium height.
   final int height;
 
+  /// The medium mimeType.
+  final String mimeType;
+
   /// The duration of video
   final int duration;
 
@@ -31,6 +34,7 @@ class Medium {
     this.mediumType,
     this.width,
     this.height,
+    this.mimeType,
     this.duration,
     this.creationDate,
     this.modifiedDate,
@@ -42,6 +46,7 @@ class Medium {
         mediumType = jsonToMediumType(json["mediumType"]),
         width = json["width"],
         height = json["height"],
+        mimeType = json["mimeType"],
         duration = json['duration'] ?? 0,
         creationDate = json['creationDate'] != null
             ? DateTime.fromMillisecondsSinceEpoch(json['creationDate'])
@@ -56,6 +61,7 @@ class Medium {
       mediumType: jsonToMediumType(map['mediumType']),
       width: map['width'],
       height: map['height'],
+      mimeType: map["mimeType"],
       creationDate: map['creationDate'],
       modifiedDate: map['modifiedDate'],
     );
@@ -66,6 +72,7 @@ class Medium {
       "id": this.id,
       "mediumType": mediumTypeToJson(this.mediumType),
       "height": this.height,
+      "mimeType": this.mimeType,
       "width": this.width,
       "creationDate": this.creationDate,
       "modifiedDate": this.modifiedDate,
@@ -104,6 +111,7 @@ class Medium {
           mediumType == other.mediumType &&
           width == other.width &&
           height == other.height &&
+          mimeType == other.mimeType &&
           creationDate == other.creationDate &&
           modifiedDate == other.modifiedDate;
 
@@ -113,6 +121,7 @@ class Medium {
       mediumType.hashCode ^
       width.hashCode ^
       height.hashCode ^
+      mimeType.hashCode ^
       creationDate.hashCode ^
       modifiedDate.hashCode;
 
@@ -122,6 +131,7 @@ class Medium {
         'mediumType: $mediumType, '
         'width: $width, '
         'height: $height, '
+        'mimeType: $mimeType, '
         'creationDate: $creationDate, '
         'modifiedDate: $modifiedDate}';
   }
