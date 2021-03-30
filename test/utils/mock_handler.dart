@@ -11,7 +11,7 @@ Future<dynamic> mockMethodCallHandler(MethodCall call) async {
     return albums;
   } else if (call.method == "listMedia") {
     String albumId = call.arguments['albumId'];
-    MediumType mediumType = jsonToMediumType(call.arguments['mediumType']);
+    MediumType? mediumType = jsonToMediumType(call.arguments['mediumType']);
     int total = call.arguments['total'];
     int skip = call.arguments['skip'];
     int take = call.arguments['take'];

@@ -3,18 +3,18 @@ part of photogallery;
 /// Fetches the given album thumbnail from the gallery.
 class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   const AlbumThumbnailProvider({
-    @required this.albumId,
+    required this.albumId,
     this.mediumType,
     this.height,
     this.width,
     this.highQuality = false,
-  }) : assert(albumId != null);
+  });
 
   final String albumId;
-  final MediumType mediumType;
-  final int height;
-  final int width;
-  final bool highQuality;
+  final MediumType? mediumType;
+  final int? height;
+  final int? width;
+  final bool? highQuality;
 
   @override
   ImageStreamCompleter load(key, decode) {
@@ -37,9 +37,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
       width: width,
       highQuality: highQuality,
     );
-    if (bytes == null || bytes.length == 0) return null;
-
-    return await decode(bytes);
+    return await decode(Uint8List.fromList(bytes));
   }
 
   @override
@@ -55,7 +53,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   }
 
   @override
-  int get hashCode => albumId?.hashCode ?? 0;
+  int get hashCode => albumId.hashCode;
 
   @override
   String toString() => '$runtimeType("$albumId")';

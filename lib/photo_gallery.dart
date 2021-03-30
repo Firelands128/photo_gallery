@@ -2,6 +2,7 @@ library photogallery;
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -23,9 +24,8 @@ class PhotoGallery {
 
   /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
-    @required MediumType mediumType,
+    required MediumType mediumType,
   }) async {
-    assert(mediumType != null);
     final json = await _channel.invokeMethod('listAlbums', {
       'mediumType': mediumTypeToJson(mediumType),
     });
@@ -34,12 +34,11 @@ class PhotoGallery {
 
   /// List all available media in a specific album, support pagination of media
   static Future<MediaPage> _listMedia({
-    @required Album album,
-    @required int total,
-    int skip,
-    int take,
+    required Album album,
+    required int total,
+    int? skip,
+    int? take,
   }) async {
-    assert(album.id != null);
     final json = await _channel.invokeMethod('listMedia', {
       'albumId': album.id,
       'mediumType': mediumTypeToJson(album.mediumType),
@@ -52,10 +51,9 @@ class PhotoGallery {
 
   /// Get medium metadata by medium id
   static Future<Medium> getMedium({
-    @required String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    MediumType? mediumType,
   }) async {
-    assert(mediumId != null);
     final json = await _channel.invokeMethod('getMedium', {
       'mediumId': mediumId,
       'mediumType': mediumTypeToJson(mediumType),
@@ -64,14 +62,13 @@ class PhotoGallery {
   }
 
   /// Get medium thumbnail by medium id
-  static Future<List<dynamic>> getThumbnail({
-    @required String mediumId,
-    MediumType mediumType,
-    int width,
-    int height,
-    bool highQuality,
+  static Future<List<int>> getThumbnail({
+    required String mediumId,
+    MediumType? mediumType,
+    int? width,
+    int? height,
+    bool? highQuality,
   }) async {
-    assert(mediumId != null);
     final bytes = await _channel.invokeMethod('getThumbnail', {
       'mediumId': mediumId,
       'mediumType': mediumTypeToJson(mediumType),
@@ -83,14 +80,13 @@ class PhotoGallery {
   }
 
   /// Get album thumbnail by album id
-  static Future<List<dynamic>> getAlbumThumbnail({
-    @required String albumId,
-    MediumType mediumType,
-    int width,
-    int height,
-    bool highQuality,
+  static Future<List<int>> getAlbumThumbnail({
+    required String albumId,
+    MediumType? mediumType,
+    int? width,
+    int? height,
+    bool? highQuality,
   }) async {
-    assert(albumId != null);
     final bytes = await _channel.invokeMethod('getAlbumThumbnail', {
       'albumId': albumId,
       'mediumType': mediumTypeToJson(mediumType),
@@ -103,10 +99,9 @@ class PhotoGallery {
 
   /// get medium file by medium id
   static Future<File> getFile({
-    @required String mediumId,
-    MediumType mediumType,
+    required String mediumId,
+    MediumType? mediumType,
   }) async {
-    assert(mediumId != null);
     final path = await _channel.invokeMethod('getFile', {
       'mediumId': mediumId,
       'mediumType': mediumTypeToJson(mediumType),
