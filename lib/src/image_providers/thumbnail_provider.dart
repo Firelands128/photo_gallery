@@ -7,7 +7,7 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
     this.mediumType,
     this.height,
     this.width,
-    this.highQuality,
+    this.highQuality = false,
   });
 
   final String mediumId;

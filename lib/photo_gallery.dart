@@ -67,7 +67,7 @@ class PhotoGallery {
     MediumType? mediumType,
     int? width,
     int? height,
-    bool? highQuality,
+    bool? highQuality = false,
   }) async {
     final bytes = await _channel.invokeMethod('getThumbnail', {
       'mediumId': mediumId,
@@ -76,7 +76,7 @@ class PhotoGallery {
       'height': height,
       'highQuality': highQuality,
     });
-    return bytes;
+    return new List<int>.from(bytes);
   }
 
   /// Get album thumbnail by album id
@@ -85,7 +85,7 @@ class PhotoGallery {
     MediumType? mediumType,
     int? width,
     int? height,
-    bool? highQuality,
+    bool? highQuality = false,
   }) async {
     final bytes = await _channel.invokeMethod('getAlbumThumbnail', {
       'albumId': albumId,
@@ -94,7 +94,7 @@ class PhotoGallery {
       'height': height,
       'highQuality': highQuality,
     });
-    return bytes;
+    return new List<int>.from(bytes);
   }
 
   /// get medium file by medium id

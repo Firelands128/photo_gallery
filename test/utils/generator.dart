@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:photo_gallery/photo_gallery.dart';
 
 class Generator {
-  static dynamic generateAlbumsJson({MediumType mediumType = MediumType.image}) {
+  static dynamic generateAlbumsJson(
+      {MediumType? mediumType = MediumType.image}) {
     return [
       {
         "id": "__ALL__",
@@ -20,7 +21,7 @@ class Generator {
     ];
   }
 
-  static List<Album> generateAlbums({required MediumType mediumType}) {
+  static List<Album> generateAlbums({MediumType? mediumType}) {
     return Generator.generateAlbumsJson(mediumType: mediumType)
         .map<Album>((x) => Album.fromJson(x))
         .toList();
@@ -28,8 +29,8 @@ class Generator {
 
   static dynamic generateMediaPageJson({
     required String albumId,
-    required MediumType mediumType,
-    required int total,
+    MediumType? mediumType,
+    int total = 10,
     int? skip,
     int? take,
   }) {
@@ -53,7 +54,7 @@ class Generator {
 
   static dynamic generateMediaJson({
     required String mediumId,
-    required MediumType mediumType,
+    MediumType? mediumType,
   }) {
     return {
       "id": mediumId,
@@ -69,14 +70,15 @@ class Generator {
 
   static MediaPage generateMediaPage({
     required Album album,
-    required MediumType mediumType,
+    MediumType? mediumType,
+    required int total,
     int? skip,
     int? take,
   }) {
     dynamic json = generateMediaPageJson(
       albumId: album.id,
       mediumType: mediumType,
-      total: album.count,
+      total: total,
       skip: skip,
       take: take,
     );
@@ -85,7 +87,7 @@ class Generator {
 
   static Medium generateMedia({
     required String mediumId,
-    required MediumType mediumType,
+    MediumType? mediumType,
   }) {
     return Medium.fromJson(
       generateMediaJson(mediumId: mediumId, mediumType: mediumType),
@@ -94,7 +96,7 @@ class Generator {
 
   static List<int> generateMockThumbnail({
     required String mediumId,
-    required MediumType mediumType,
+    MediumType? mediumType,
   }) {
     return [1, 2, 3, 4, 5, 6, 7, 8, 9];
   }
@@ -107,14 +109,14 @@ class Generator {
 
   static String generateFilePath({
     required String mediumId,
-    required MediumType mediumType,
+    MediumType? mediumType,
   }) {
     return "/path/to/file";
   }
 
   static File generateFile({
     required String mediumId,
-    required MediumType mediumType,
+    MediumType? mediumType,
   }) {
     return File(generateFilePath(mediumId: mediumId, mediumType: mediumType));
   }

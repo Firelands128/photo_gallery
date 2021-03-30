@@ -1,12 +1,10 @@
 PODS:
   - Flutter (1.0.0)
-  - "permission_handler (5.0.1+1)":
+  - "permission_handler (5.1.0+2)":
     - Flutter
   - photo_gallery (0.0.1):
     - Flutter
   - video_player (0.0.1):
-    - Flutter
-  - video_player_web (0.0.1):
     - Flutter
 
 DEPENDENCIES:
@@ -14,7 +12,6 @@ DEPENDENCIES:
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - photo_gallery (from `.symlinks/plugins/photo_gallery/ios`)
   - video_player (from `.symlinks/plugins/video_player/ios`)
-  - video_player_web (from `.symlinks/plugins/video_player_web/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -25,16 +22,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/photo_gallery/ios"
   video_player:
     :path: ".symlinks/plugins/video_player/ios"
-  video_player_web:
-    :path: ".symlinks/plugins/video_player_web/ios"
 
 SPEC CHECKSUMS:
-  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
-  permission_handler: eac8e15b4a1a3fba55b761d19f3f4e6b005d15b6
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
   photo_gallery: 9f95e57747cd22c10676ece3660d1ffe6c603ee5
   video_player: 9cc823b1d9da7e8427ee591e8438bfbcde500e6e
-  video_player_web: da8cadb8274ed4f8dbee8d7171b420dedd437ce7
 
-PODFILE CHECKSUM: c34e2287a9ccaa606aeceab922830efb9a6ff69a
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.1

@@ -18,7 +18,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<Album> _albums;
+  List<Album>? _albums;
   bool _loading = false;
 
   @override
@@ -150,7 +150,7 @@ class AlbumPage extends StatefulWidget {
 }
 
 class AlbumPageState extends State<AlbumPage> {
-  List<Medium> _media;
+  List<Medium>? _media;
 
   @override
   void initState() {
@@ -213,7 +213,7 @@ class ViewerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime date = medium.creationDate ?? medium.modifiedDate;
+    DateTime? date = medium.creationDate ?? medium.modifiedDate;
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -221,7 +221,7 @@ class ViewerPage extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(),
             icon: Icon(Icons.arrow_back_ios),
           ),
-          title: Text(date?.toLocal().toString()),
+          title: date != null ? Text(date.toLocal().toString()) : null,
         ),
         body: Container(
           alignment: Alignment.center,
@@ -244,7 +244,7 @@ class VideoProvider extends StatefulWidget {
   final String mediumId;
 
   const VideoProvider({
-    @required this.mediumId,
+    required this.mediumId,
   });
 
   @override
@@ -252,12 +252,12 @@ class VideoProvider extends StatefulWidget {
 }
 
 class _VideoProviderState extends State<VideoProvider> {
-  VideoPlayerController _controller;
-  File _file;
+  VideoPlayerController? _controller;
+  File? _file;
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
       initAsync();
     });
     super.initState();
@@ -266,8 +266,8 @@ class _VideoProviderState extends State<VideoProvider> {
   Future<void> initAsync() async {
     try {
       _file = await PhotoGallery.getFile(mediumId: widget.mediumId);
-      _controller = VideoPlayerController.file(_file);
-      _controller.initialize().then((_) {
+      _controller = VideoPlayerController.file(_file!);
+      _controller?.initialize().then((_) {
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {});
       });
@@ -278,25 +278,25 @@ class _VideoProviderState extends State<VideoProvider> {
 
   @override
   Widget build(BuildContext context) {
-    return _controller == null || !_controller.value.initialized
+    return _controller == null || !_controller!.value.isInitialized
         ? Container()
         : Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
+                aspectRatio: _controller!.value.aspectRatio,
+                child: VideoPlayer(_controller!),
               ),
               FlatButton(
                 onPressed: () {
                   setState(() {
-                    _controller.value.isPlaying
-                        ? _controller.pause()
-                        : _controller.play();
+                    _controller!.value.isPlaying
+                        ? _controller!.pause()
+                        : _controller!.play();
                   });
                 },
                 child: Icon(
-                  _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                  _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
                 ),
               ),
             ],

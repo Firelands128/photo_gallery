@@ -37,6 +37,7 @@ void main() {
     MediaPage expected = Generator.generateMediaPage(
       album: allAlbum,
       mediumType: mediumType,
+      total: allAlbum.count,
       skip: skip,
       take: take,
     );
