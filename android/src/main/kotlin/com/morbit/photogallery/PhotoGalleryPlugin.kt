@@ -302,12 +302,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                                 MediaStore.Images.Media.DATE_MODIFIED
                             )
                         )
-                        putIntArray(
+                        putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            intArrayOf(
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                            )
+                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
                         )
                         // Selection
                         if (albumId != allAlbumId) {
@@ -365,12 +362,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                                 MediaStore.Video.Media.DATE_MODIFIED
                             )
                         )
-                        putIntArray(
+                        putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            intArrayOf(
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                            )
+                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
                         )
                         // Selection
                         if (albumId != allAlbumId) {
@@ -574,12 +568,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                                 MediaStore.Images.Media.DATE_MODIFIED
                             )
                         )
-                        putIntArray(
+                        putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            intArrayOf(
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                            )
+                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
                         )
                         // Selection
                         if (albumId != allAlbumId) {
@@ -630,12 +621,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                                 MediaStore.Video.Media.DATE_MODIFIED
                             )
                         )
-                        putIntArray(
+                        putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            intArrayOf(
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING,
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                            )
+                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
                         )
                         // Selection
                         if (albumId != allAlbumId) {
