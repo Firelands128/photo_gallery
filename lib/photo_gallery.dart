@@ -35,6 +35,7 @@ class PhotoGallery {
   /// List all available media in a specific album, support pagination of media
   static Future<MediaPage> _listMedia({
     required Album album,
+    bool newest = true,
     required int total,
     int? skip,
     int? take,
@@ -42,6 +43,7 @@ class PhotoGallery {
     final json = await _channel.invokeMethod('listMedia', {
       'albumId': album.id,
       'mediumType': mediumTypeToJson(album.mediumType),
+      'newest': newest,
       'total': total,
       'skip': skip,
       'take': take,

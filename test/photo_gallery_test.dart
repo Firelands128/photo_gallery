@@ -29,6 +29,7 @@ void main() {
 
   test('list media', () async {
     MediumType mediumType = MediumType.image;
+    bool newest = true;
     int skip = 0;
     int take = 1;
     List<Album> albums = await PhotoGallery.listAlbums(mediumType: mediumType);
@@ -37,6 +38,7 @@ void main() {
     MediaPage expected = Generator.generateMediaPage(
       album: allAlbum,
       mediumType: mediumType,
+      newest: newest,
       total: allAlbum.count,
       skip: skip,
       take: take,

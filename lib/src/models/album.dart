@@ -30,11 +30,13 @@ class Album {
   /// Pagination can be controlled out of [skip] (defaults to `0`) and
   /// [take] (defaults to `<total>`).
   Future<MediaPage> listMedia({
+    bool newest = true,
     int? skip,
     int? take,
   }) {
     return PhotoGallery._listMedia(
       album: this,
+      newest: newest,
       total: this.count,
       skip: skip,
       take: take,

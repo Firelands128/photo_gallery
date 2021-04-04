@@ -90,13 +90,14 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "listMedia" -> {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
+                val newest = call.argument<Boolean>("newest")
                 val total = call.argument<Int>("total")
                 val skip = call.argument<Int>("skip")
                 val take = call.argument<Int>("take")
                 BackgroundAsyncTask({
                     when (mediumType) {
-                        imageType -> listImages(albumId!!, total!!, skip, take)
-                        videoType -> listVideos(albumId!!, total!!, skip, take)
+                        imageType -> listImages(albumId!!, newest!!, total!!, skip, take)
+                        videoType -> listVideos(albumId!!, newest!!, total!!, skip, take)
                         else -> null
                     }
                 }, { v ->
@@ -278,7 +279,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return listOf()
     }
 
-    private fun listImages(albumId: String, total: Int, skip: Int?, take: Int?): Map<String, Any> {
+    private fun listImages(albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any> {
         val media = mutableListOf<Map<String, Any?>>()
         val offset = skip ?: 0
         val limit = take ?: (total - offset)
@@ -304,7 +305,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         )
                         putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            if (newest) {
+                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            } else {
+                                android.content.ContentResolver.QUERY_SORT_DIRECTION_ASCENDING
+                            }
                         )
                         // Selection
                         if (albumId != allAlbumId) {
@@ -332,13 +337,14 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return mapOf(
+            "newest" to newest,
             "start" to offset,
             "total" to total,
             "items" to media
         )
     }
 
-    private fun listVideos(albumId: String, total: Int, skip: Int?, take: Int?): Map<String, Any> {
+    private fun listVideos(albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any> {
         val media = mutableListOf<Map<String, Any?>>()
         val offset = skip ?: 0
         val limit = take ?: (total - offset)
@@ -364,7 +370,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         )
                         putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            if (newest) {
+                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            } else {
+                                android.content.ContentResolver.QUERY_SORT_DIRECTION_ASCENDING
+                            }
                         )
                         // Selection
                         if (albumId != allAlbumId) {
@@ -392,6 +402,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return mapOf(
+            "newest" to newest,
             "start" to offset,
             "total" to total,
             "items" to media

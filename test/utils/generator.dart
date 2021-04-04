@@ -30,6 +30,7 @@ class Generator {
   static dynamic generateMediaPageJson({
     required String albumId,
     MediumType? mediumType,
+    bool newest = true,
     int total = 10,
     int? skip,
     int? take,
@@ -46,6 +47,7 @@ class Generator {
     }
 
     return {
+      "newest": newest,
       "start": skip,
       "total": total,
       "items": items,
@@ -71,6 +73,7 @@ class Generator {
   static MediaPage generateMediaPage({
     required Album album,
     MediumType? mediumType,
+    bool newest = true,
     required int total,
     int? skip,
     int? take,
@@ -78,6 +81,7 @@ class Generator {
     dynamic json = generateMediaPageJson(
       albumId: album.id,
       mediumType: mediumType,
+      newest: newest,
       total: total,
       skip: skip,
       take: take,

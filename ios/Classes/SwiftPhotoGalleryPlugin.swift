@@ -21,9 +21,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let albumId = arguments["albumId"] as! String
       let mediumType = arguments["mediumType"] as! String
+      let newest = arguments["newest"] as! Bool
       let skip = arguments["skip"] as? NSNumber
       let take = arguments["take"] as? NSNumber
-      result(listMedia(albumId: albumId, skip: skip, take: take, mediumType: mediumType))
+      result(listMedia(albumId: albumId, mediumType: mediumType, newest: newest, skip: skip, take: take))
     }
     else if(call.method == "getMedium") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -168,11 +169,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
-  private func listMedia(albumId: String, skip: NSNumber?, take: NSNumber?, mediumType: String) -> NSDictionary {
+  private func listMedia(albumId: String, mediumType: String, newest: Bool, skip: NSNumber?, take: NSNumber?) -> NSDictionary {
     let fetchOptions = PHFetchOptions()
     fetchOptions.sortDescriptors = [
-      NSSortDescriptor(key: "creationDate", ascending: false),
-      NSSortDescriptor(key: "modificationDate", ascending: false)
+      NSSortDescriptor(key: "creationDate", ascending: newest ? false : true),
+      NSSortDescriptor(key: "modificationDate", ascending: newest ? false : true)
     ]
     fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
     
@@ -193,6 +194,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     
     return [
+      "newest": newest,
       "start": start,
       "total": total,
       "items": items,
@@ -271,7 +273,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     if (mediumType != nil) {
       fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType!)
     }
-    fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+    fetchOptions.sortDescriptors = [
+      NSSortDescriptor(key: "creationDate", ascending: false),
+      NSSortDescriptor(key: "modificationDate", ascending: false)
+    ]
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1
     }
