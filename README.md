@@ -60,6 +60,7 @@ final MediaPage imagePage = await imageAlbum.listMedia(
     take: 10,
 );
 final MediaPage videoPage = await videoAlbum.listMedia(
+    newest: false,
     skip: 5,
     take: 10,
 );
