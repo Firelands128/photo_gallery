@@ -1,3 +1,9 @@
+## 1.0.0
+
+Add null safety support.
+
+Add sorting by newest or oldest functionality to ```listMedia``` API.
+
 ## 0.4.0
 
 Add ```cleanCache``` api to clean the cache directory.
