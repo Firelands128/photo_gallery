@@ -4,9 +4,11 @@ part of photogallery;
 class PhotoProvider extends ImageProvider<PhotoProvider> {
   PhotoProvider({
     required this.mediumId,
+    this.mimeType,
   });
 
   final String mediumId;
+  final String? mimeType;
 
   @override
   ImageStreamCompleter load(key, decode) {
@@ -22,7 +24,7 @@ class PhotoProvider extends ImageProvider<PhotoProvider> {
   Future<ui.Codec> _loadAsync(PhotoProvider key, DecoderCallback decode) async {
     assert(key == this);
     final file = await PhotoGallery.getFile(
-        mediumId: mediumId, mediumType: MediumType.image);
+        mediumId: mediumId, mediumType: MediumType.image, mimeType: mimeType);
 
     final bytes = await file.readAsBytes();
 

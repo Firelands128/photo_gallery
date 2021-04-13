@@ -15,9 +15,11 @@ import android.provider.MediaStore
 import android.content.Context
 import android.database.Cursor
 import android.database.Cursor.FIELD_TYPE_INTEGER
+import android.graphics.ImageDecoder
 import android.os.AsyncTask
 import android.os.Build
 import android.util.Size
+import java.io.FileOutputStream
 
 /** PhotoGalleryPlugin */
 class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
@@ -138,8 +140,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "getFile" -> {
                 val mediumId = call.argument<String>("mediumId")
                 val mediumType = call.argument<String>("mediumType")
+                val mimeType = call.argument<String>("mimeType")
                 BackgroundAsyncTask({
-                    getFile(mediumId!!, mediumType)
+                    getFile(mediumId!!, mediumType, mimeType)
                 }, { v ->
                     result.success(v)
                 })
@@ -666,24 +669,31 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getFile(mediumId: String, mediumType: String?): String? {
+    private fun getFile(mediumId: String, mediumType: String?, mimeType: String?): String? {
         return when (mediumType) {
             imageType -> {
-                getImageFile(mediumId)
+                getImageFile(mediumId, mimeType = mimeType)
             }
             videoType -> {
                 getVideoFile(mediumId)
             }
             else -> {
-                getImageFile(mediumId) ?: getVideoFile(mediumId)
+                getImageFile(mediumId, mimeType = mimeType) ?: getVideoFile(mediumId)
             }
         }
     }
 
-    private fun getImageFile(mediumId: String): String? {
-        var path: String? = null
-
+    private fun getImageFile(mediumId: String, mimeType: String? = null): String? {
         this.context?.run {
+            mimeType?.let {
+                val type = this.contentResolver.getType(
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong())
+                )
+                if (it != type) {
+                    return cacheImage(mediumId, it)
+                }
+            }
+
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Images.Media.DATA),
@@ -695,12 +705,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             imageCursor?.use { cursor ->
                 if (cursor.moveToNext()) {
                     val dataColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATA)
-                    path = cursor.getString(dataColumn)
+                    return cursor.getString(dataColumn)
                 }
             }
         }
 
-        return path
+        return null
     }
 
     private fun getVideoFile(mediumId: String): String? {
@@ -723,6 +733,51 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return path
+    }
+
+    private fun cacheImage(mediumId: String, mimeType: String): String? {
+        val bitmap: Bitmap? = this.context?.run {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try {
+                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(
+                        this.contentResolver,
+                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong())
+                    ))
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                MediaStore.Images.Media.getBitmap(
+                    this.contentResolver,
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong())
+                )
+            }
+        }
+
+        bitmap?.let {
+            val compressFormat: Bitmap.CompressFormat
+            if (mimeType == "image/jpeg") {
+                val path = File(getCachePath(), "$mediumId.jpeg")
+                val out = FileOutputStream(path)
+                compressFormat = Bitmap.CompressFormat.JPEG
+                it.compress(compressFormat, 100, out)
+                return path.absolutePath
+            } else if (mimeType == "image/png") {
+                val path = File(getCachePath(), "$mediumId.png")
+                val out = FileOutputStream(path)
+                compressFormat = Bitmap.CompressFormat.PNG
+                it.compress(compressFormat, 100, out)
+                return path.absolutePath
+            } else if (mimeType == "image/webp") {
+                val path = File(getCachePath(), "$mediumId.webp")
+                val out = FileOutputStream(path)
+                compressFormat = Bitmap.CompressFormat.WEBP
+                it.compress(compressFormat, 100, out)
+                return path.absolutePath
+            }
+        }
+
+        return null
     }
 
     private fun getImageMetadata(cursor: Cursor): Map<String, Any?> {

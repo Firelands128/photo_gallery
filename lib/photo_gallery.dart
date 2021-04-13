@@ -103,11 +103,14 @@ class PhotoGallery {
   static Future<File> getFile({
     required String mediumId,
     MediumType? mediumType,
+    String? mimeType,
   }) async {
     final path = await _channel.invokeMethod('getFile', {
       'mediumId': mediumId,
       'mediumType': mediumTypeToJson(mediumType),
-    }) as String;
+      'mimeType': mimeType,
+    }) as String?;
+    if (path == null) throw "Cannot get file $mediumId with type $mimeType";
     return File(path);
   }
 

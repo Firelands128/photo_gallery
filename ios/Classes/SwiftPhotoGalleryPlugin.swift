@@ -70,8 +70,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     else if(call.method == "getFile") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let mediumId = arguments["mediumId"] as! String
+      let mimeType = arguments["mimeType"] as? String
       getFile(
         mediumId: mediumId,
+        mimeType: mimeType,
         completion: { (filepath: String?, error: Error?) -> Void in
           result(filepath?.replacingOccurrences(of: "file://", with: ""))
       })
@@ -319,7 +321,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     completion(nil , NSError(domain: "photo_gallery", code: 404, userInfo: nil))
   }
   
-  private func getFile(mediumId: String, completion: @escaping (String?, Error?) -> Void) {
+  private func getFile(mediumId: String, mimeType: String?, completion: @escaping (String?, Error?) -> Void) {
     let manager = PHImageManager.default()
     
     let fetchOptions = PHFetchOptions()
@@ -349,6 +351,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
               guard let assetUTI = uti else {
                 completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
                 return
+              }
+              if mimeType != nil {
+                let type = self.extractMimeTypeFromUTI(uti: assetUTI)
+                if type != mimeType {
+                  let path = self.cacheImage(asset: asset, data: imageData, mimeType: mimeType!)
+                  completion(path, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
+                  return
+                }
               }
               let fileExt = self.extractFileExtensionFromUTI(uti: assetUTI)
               let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
@@ -383,6 +393,22 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
   }
   
+  private func cacheImage(asset: PHAsset, data: Data, mimeType: String) -> String? {
+    if mimeType == "image/jpeg" {
+      let filepath = self.exportPathForAsset(asset: asset, ext: ".jpeg")
+      let uiImage = UIImage(data: data)
+      try! uiImage?.jpegData(compressionQuality: 100)?.write(to: filepath, options: .atomic)
+      return filepath.absoluteString
+    } else if mimeType == "image/png" {
+      let filepath = self.exportPathForAsset(asset: asset, ext: ".png")
+      let uiImage = UIImage(data: data)
+      try! uiImage?.pngData()?.write(to: filepath, options: .atomic)
+      return filepath.absoluteString
+    } else {
+      return nil
+    }
+  }
+
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     return [
