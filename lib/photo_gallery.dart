@@ -25,9 +25,11 @@ class PhotoGallery {
   /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
     required MediumType mediumType,
+    bool? hideIfEmpty = true,
   }) async {
     final json = await _channel.invokeMethod('listAlbums', {
       'mediumType': mediumTypeToJson(mediumType),
+      'hideIfEmpty': hideIfEmpty
     });
     return json.map<Album>((x) => Album.fromJson(x)).toList();
   }
@@ -78,6 +80,7 @@ class PhotoGallery {
       'height': height,
       'highQuality': highQuality,
     });
+    if (bytes == null) throw "Failed to fetch thumbnail of medium $mediumId";
     return new List<int>.from(bytes);
   }
 
@@ -96,6 +99,7 @@ class PhotoGallery {
       'height': height,
       'highQuality': highQuality,
     });
+    if (bytes == null) throw "Failed to fetch thumbnail of album $albumId";
     return new List<int>.from(bytes);
   }
 

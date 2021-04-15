@@ -15,7 +15,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     if(call.method == "listAlbums") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let mediumType = arguments["mediumType"] as! String
-      result(listAlbums(mediumType: mediumType))
+      let hideIfEmpty = arguments["hideIfEmpty"] as? Bool
+      result(listAlbums(mediumType: mediumType, hideIfEmpty: hideIfEmpty))
     }
     else if(call.method == "listMedia") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -89,7 +90,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   
   private var assetCollections : [PHAssetCollection]  = []
   
-  private func listAlbums(mediumType: String) -> [NSDictionary] {
+  private func listAlbums(mediumType: String, hideIfEmpty: Bool? = true) -> [NSDictionary] {
     self.assetCollections = []
     let fetchOptions = PHFetchOptions()
     var total = 0
@@ -142,13 +143,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     // Smart Albums.
     processPHAssetCollections(
       fetchResult: PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .albumRegular, options: fetchOptions),
-      hideIfEmpty: true
+      hideIfEmpty: hideIfEmpty ?? true
     )
     
     // User-created collections.
     processPHCollections(
       fetchResult: PHAssetCollection.fetchTopLevelUserCollections(with: fetchOptions),
-      hideIfEmpty: true
+      hideIfEmpty: hideIfEmpty ?? true
     )
     
     albums.insert([
