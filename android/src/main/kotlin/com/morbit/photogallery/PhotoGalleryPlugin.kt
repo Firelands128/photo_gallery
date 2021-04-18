@@ -492,7 +492,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 try {
                     this.contentResolver.loadThumbnail(
                         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
-                        Size(width ?: 72, height ?: 72),
+                        Size(width ?: 512, height ?: 384),
                         null
                     )
                 } catch (e: Exception) {
@@ -524,7 +524,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 try {
                     this.contentResolver.loadThumbnail(
                         ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
-                        Size(width ?: 72, height ?: 72),
+                        Size(width ?: 512, height ?: 384),
                         null
                     )
                 } catch (e: Exception) {
