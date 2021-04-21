@@ -120,8 +120,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val mediumType = call.argument<String>("mediumType")
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
+                val highQuality = call.argument<Boolean>("highQuality")
                 BackgroundAsyncTask({
-                    getThumbnail(mediumId!!, mediumType, width, height)
+                    getThumbnail(mediumId!!, mediumType, width, height, highQuality)
                 }, { v ->
                     result.success(v)
                 })
@@ -131,8 +132,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val mediumType = call.argument<String>("mediumType")
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
+                val highQuality = call.argument<Boolean>("highQuality")
                 BackgroundAsyncTask({
-                    getAlbumThumbnail(albumId!!, mediumType, width, height)
+                    getAlbumThumbnail(albumId!!, mediumType, width, height, highQuality)
                 }, { v ->
                     result.success(v)
                 })
@@ -469,40 +471,42 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return videoMetadata
     }
 
-    private fun getThumbnail(mediumId: String, mediumType: String?, width: Int?, height: Int?): ByteArray? {
+    private fun getThumbnail(mediumId: String, mediumType: String?, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return when (mediumType) {
             imageType -> {
-                getImageThumbnail(mediumId, width, height)
+                getImageThumbnail(mediumId, width, height, highQuality)
             }
             videoType -> {
-                getVideoThumbnail(mediumId, width, height)
+                getVideoThumbnail(mediumId, width, height, highQuality)
             }
             else -> {
-                getImageThumbnail(mediumId, width, height)
-                    ?: getVideoThumbnail(mediumId, width, height)
+                getImageThumbnail(mediumId, width, height, highQuality)
+                    ?: getVideoThumbnail(mediumId, width, height, highQuality)
             }
         }
     }
 
-    private fun getImageThumbnail(mediumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getImageThumbnail(mediumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         var byteArray: ByteArray? = null
 
         val bitmap: Bitmap? = this.context?.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 try {
+                    val widthSize = width ?: if (highQuality == true) 512 else 96
+                    val heightSize = height ?: if (highQuality == true) 384 else 96
                     this.contentResolver.loadThumbnail(
                         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
-                        Size(width ?: 512, height ?: 384),
+                        Size(widthSize, heightSize),
                         null
                     )
                 } catch (e: Exception) {
                     null
                 }
             } else {
+                val kind = if (highQuality == true) MediaStore.Images.Thumbnails.MINI_KIND else MediaStore.Images.Thumbnails.MICRO_KIND
                 MediaStore.Images.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
-                    MediaStore.Images.Thumbnails.MINI_KIND,
-                    null
+                    kind, null
                 )
             }
         }
@@ -516,25 +520,27 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return byteArray
     }
 
-    private fun getVideoThumbnail(mediumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getVideoThumbnail(mediumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         var byteArray: ByteArray? = null
 
         val bitmap: Bitmap? = this.context?.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 try {
+                    val widthSize = width ?: if (highQuality == true) 512 else 96
+                    val heightSize = height ?: if (highQuality == true) 384 else 96
                     this.contentResolver.loadThumbnail(
                         ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, mediumId.toLong()),
-                        Size(width ?: 512, height ?: 384),
+                        Size(widthSize, heightSize),
                         null
                     )
                 } catch (e: Exception) {
                     null
                 }
             } else {
+                val kind = if (highQuality == true) MediaStore.Images.Thumbnails.MINI_KIND else MediaStore.Images.Thumbnails.MICRO_KIND
                 MediaStore.Video.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
-                    MediaStore.Images.Thumbnails.MINI_KIND,
-                    null
+                    kind,null
                 )
             }
         }
@@ -548,22 +554,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return byteArray
     }
 
-    private fun getAlbumThumbnail(albumId: String, mediumType: String?, width: Int?, height: Int?): ByteArray? {
+    private fun getAlbumThumbnail(albumId: String, mediumType: String?, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return when (mediumType) {
             imageType -> {
-                getImageAlbumThumbnail(albumId, width, height)
+                getImageAlbumThumbnail(albumId, width, height, highQuality)
             }
             videoType -> {
-                getVideoAlbumThumbnail(albumId, width, height)
+                getVideoAlbumThumbnail(albumId, width, height, highQuality)
             }
             else -> {
-                getImageAlbumThumbnail(albumId, width, height)
-                    ?: getVideoAlbumThumbnail(albumId, width, height)
+                getImageAlbumThumbnail(albumId, width, height, highQuality)
+                    ?: getVideoAlbumThumbnail(albumId, width, height, highQuality)
             }
         }
     }
 
-    private fun getImageAlbumThumbnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getImageAlbumThumbnail(albumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return this.context?.run {
             val imageCursor: Cursor?
 
@@ -608,7 +614,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 if (cursor.moveToFirst()) {
                     val idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID)
                     val id = cursor.getLong(idColumn)
-                    return@run getImageThumbnail(id.toString(), width, height)
+                    return@run getImageThumbnail(id.toString(), width, height, highQuality)
                 }
             }
 
@@ -616,7 +622,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoAlbumThumbnail(albumId: String, width: Int?, height: Int?): ByteArray? {
+    private fun getVideoAlbumThumbnail(albumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return this.context?.run {
             val videoCursor: Cursor?
 
@@ -661,7 +667,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 if (cursor.moveToNext()) {
                     val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
                     val id = cursor.getLong(idColumn)
-                    return@run getVideoThumbnail(id.toString(), width, height)
+                    return@run getVideoThumbnail(id.toString(), width, height, highQuality)
                 }
             }
 
