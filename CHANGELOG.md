@@ -1,3 +1,11 @@
+## 1.0.1
+
+Add "mimeType" parameter in "getFile" API to allow specifying image format when get full image on both platforms.
+
+Add optional "hideIfEmpty" parameter in "listAlbums" API to show empty albums, only available on iOS platform.
+
+Accept "highQuality" parameter in "getThumbnail" and "getAlbumThumbnail" API on Android platform.
+
 ## 1.0.0
 
 Add null safety support.
