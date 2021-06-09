@@ -22,7 +22,7 @@ class Album {
   Album.fromJson(dynamic json)
       : id = json['id'],
         mediumType = jsonToMediumType(json['mediumType']),
-        name = json['name'],
+        name = json['name']==null?"":json['name'],
         count = json['count'];
 
   /// list media in the album.
