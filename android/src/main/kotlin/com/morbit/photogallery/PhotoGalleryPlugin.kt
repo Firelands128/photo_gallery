@@ -292,7 +292,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         this.context?.run {
             val imageCursor: Cursor?
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 imageCursor = this.contentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     imageMetadataProjection,
@@ -357,7 +357,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         this.context?.run {
             val videoCursor: Cursor?
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                     videoMetadataProjection,
@@ -573,7 +573,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return this.context?.run {
             val imageCursor: Cursor?
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 imageCursor = this.contentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     arrayOf(MediaStore.Images.Media._ID),
@@ -626,7 +626,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return this.context?.run {
             val videoCursor: Cursor?
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                     arrayOf(MediaStore.Video.Media._ID),
