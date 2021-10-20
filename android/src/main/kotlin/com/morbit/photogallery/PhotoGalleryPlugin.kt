@@ -68,7 +68,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Video.Media._ID,
             MediaStore.Video.Media.WIDTH,
             MediaStore.Video.Media.HEIGHT,
-            MediaStore.Images.Media.ORIENTATION,
+            MediaStore.Video.Media.ORIENTATION,
             MediaStore.Video.Media.MIME_TYPE,
             MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media.DATE_TAKEN,
@@ -827,7 +827,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
         val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
         val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
-        val orientationColumn = cursor.getColumnIndex(MediaStore.Images.Media.ORIENTATION)
+        val orientationColumn = cursor.getColumnIndex(MediaStore.Video.Media.ORIENTATION)
         val mimeColumn = cursor.getColumnIndex(MediaStore.Video.Media.MIME_TYPE)
         val durationColumn = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
         val dateTakenColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_TAKEN)
