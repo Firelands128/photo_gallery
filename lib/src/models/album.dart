@@ -10,7 +10,7 @@ class Album {
   final MediumType? mediumType;
 
   /// The name of the album.
-  final String name;
+  final String? name;
 
   /// The total number of media in the album.
   final int count;

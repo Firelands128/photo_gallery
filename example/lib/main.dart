@@ -105,7 +105,7 @@ class _MyAppState extends State<MyApp> {
                                   alignment: Alignment.topLeft,
                                   padding: EdgeInsets.only(left: 2.0),
                                   child: Text(
-                                    album.name,
+                                    album.name ?? "Unnamed Album",
                                     maxLines: 1,
                                     textAlign: TextAlign.start,
                                     style: TextStyle(
@@ -174,7 +174,7 @@ class AlbumPageState extends State<AlbumPage> {
             icon: Icon(Icons.arrow_back_ios),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(widget.album.name),
+          title: Text(widget.album.name ?? "Unnamed Album"),
         ),
         body: GridView.count(
           crossAxisCount: 3,
