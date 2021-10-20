@@ -816,7 +816,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "mediumType" to imageType,
             "width" to width,
             "height" to height,
-            "orientation" to orientation,
+            "orientation" to orientationDegree2Value(orientation),
             "mimeType" to mimeType,
             "creationDate" to dateTaken,
             "modifiedDate" to dateModified
@@ -852,13 +852,23 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "id" to id.toString(),
             "mediumType" to videoType,
             "width" to width,
-            "orientation" to orientation,
+            "orientation" to orientationDegree2Value(orientation),
             "height" to height,
             "mimeType" to mimeType,
             "duration" to duration,
             "creationDate" to dateTaken,
             "modifiedDate" to dateModified
         )
+    }
+
+    private fun orientationDegree2Value(degree: Long): Int {
+        return when (degree) {
+            0L -> 1
+            90L -> 8
+            180L -> 3
+            270L -> 6
+            else -> 0
+        }
     }
 
     private fun getCachePath(): File? {

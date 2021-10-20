@@ -211,13 +211,17 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
     
-    if (assets.count > 0) {
+    if (assets.count <= 0) {
+      completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
+    } else {
       let asset: PHAsset = assets[0]
-      completion(getMediumFromAsset(asset: asset), nil)
-      return
+      getMediumFromAssetAsync(
+        asset: asset,
+        completion: { (data: [String: Any?]?, error: Error?) -> Void in
+          completion(data, nil)
+        }
+      )
     }
-    
-    completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
   }
   
   private func getThumbnail(
@@ -423,6 +427,28 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
   }
+  
+  private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
+    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
+    let manager = PHImageManager.default()
+    manager.requestImageData(
+      for: asset,
+      options: nil,
+      resultHandler: { (data: Data?, uti: String?, orientation: UIImage.Orientation, info: ([AnyHashable: Any]?)) -> Void in
+        completion([
+          "id": asset.localIdentifier,
+          "mediumType": self.toDartMediumType(value: asset.mediaType),
+          "mimeType": mimeType,
+          "height": asset.pixelHeight,
+          "width": asset.pixelWidth,
+          "orientation": self.toOrientationValue(orientation: orientation),
+          "duration": NSInteger(asset.duration * 1000),
+          "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
+          "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
+        ], nil)
+      }
+    )
+  }
 
   private func exportPathForAsset(asset: PHAsset, ext: String) -> URL {
     let mediumId = asset.localIdentifier
@@ -447,6 +473,29 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     case PHAssetMediaType.video: return "video"
     case PHAssetMediaType.audio: return "audio"
     default: return nil
+    }
+  }
+  
+  private func toOrientationValue(orientation: UIImage.Orientation) -> Int {
+    switch orientation {
+    case UIImage.Orientation.up:
+      return 1
+    case UIImage.Orientation.down:
+      return 3
+    case UIImage.Orientation.left:
+      return 6
+    case UIImage.Orientation.right:
+      return 8
+    case UIImage.Orientation.upMirrored:
+      return 2
+    case UIImage.Orientation.downMirrored:
+      return 4
+    case UIImage.Orientation.leftMirrored:
+      return 5
+    case UIImage.Orientation.rightMirrored:
+      return 7
+    @unknown default:
+      return 0
     }
   }
   
