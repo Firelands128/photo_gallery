@@ -416,8 +416,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
 
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
+    let filename = self.extractFilenameFromAsset(asset: asset)
     return [
       "id": asset.localIdentifier,
+      "filename": filename,
+      "title": self.extractTitleFromFilename(filename: filename),
       "mediumType": toDartMediumType(value: asset.mediaType),
       "mimeType": mimeType,
       "height": asset.pixelHeight,
@@ -430,6 +433,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   
   private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
+    let filename = self.extractFilenameFromAsset(asset: asset)
     let manager = PHImageManager.default()
     manager.requestImageData(
       for: asset,
@@ -437,6 +441,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       resultHandler: { (data: Data?, uti: String?, orientation: UIImage.Orientation, info: ([AnyHashable: Any]?)) -> Void in
         completion([
           "id": asset.localIdentifier,
+          "filename": filename,
+          "title": self.extractTitleFromFilename(filename: filename),
           "mediumType": self.toDartMediumType(value: asset.mediaType),
           "mimeType": mimeType,
           "height": asset.pixelHeight,
@@ -549,6 +555,23 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func extractMimeTypeFromAsset(asset: PHAsset) -> String? {
     let uti = self.extractUTIFromAsset(asset: asset)
     return self.extractMimeTypeFromUTI(uti: uti)
+  }
+  
+  private func extractFilenameFromAsset(asset: PHAsset) -> String? {
+    if #available(iOS 9.0, *) {
+      let resources = PHAssetResource.assetResources(for: asset)
+      if let resource = resources.first {
+        return resource.originalFilename
+      }
+    }
+    return asset.value(forKey: "filename") as? String
+  }
+  
+  private func extractTitleFromFilename(filename: String?) -> String? {
+    if let name = filename {
+      return (name as NSString).deletingPathExtension
+    }
+    return nil
   }
   
   private func cachePath() -> URL {

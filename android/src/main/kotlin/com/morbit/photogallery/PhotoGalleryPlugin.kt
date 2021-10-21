@@ -56,6 +56,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         val imageMetadataProjection = arrayOf(
             MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DISPLAY_NAME,
+            MediaStore.Images.Media.TITLE,
             MediaStore.Images.Media.WIDTH,
             MediaStore.Images.Media.HEIGHT,
             MediaStore.Images.Media.ORIENTATION,
@@ -66,6 +68,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         val videoMetadataProjection = arrayOf(
             MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.DISPLAY_NAME,
+            MediaStore.Video.Media.TITLE,
             MediaStore.Video.Media.WIDTH,
             MediaStore.Video.Media.HEIGHT,
             MediaStore.Video.Media.ORIENTATION,
@@ -797,6 +801,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun getImageMetadata(cursor: Cursor): Map<String, Any?> {
         val idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+        val filenameColumn = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
+        val titleColumn = cursor.getColumnIndex(MediaStore.Images.Media.TITLE)
         val widthColumn = cursor.getColumnIndex(MediaStore.Images.Media.WIDTH)
         val heightColumn = cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT)
         val orientationColumn = cursor.getColumnIndex(MediaStore.Images.Media.ORIENTATION)
@@ -805,6 +811,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED)
 
         val id = cursor.getLong(idColumn)
+        val filename = cursor.getString(filenameColumn)
+        val title = cursor.getString(titleColumn)
         val width = cursor.getLong(widthColumn)
         val height = cursor.getLong(heightColumn)
         val orientation = cursor.getLong(orientationColumn)
@@ -820,6 +828,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         return mapOf(
             "id" to id.toString(),
+            "filename" to filename,
+            "title" to title,
             "mediumType" to imageType,
             "width" to width,
             "height" to height,
@@ -832,6 +842,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun getVideoMetadata(cursor: Cursor): Map<String, Any?> {
         val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+        val filenameColumn = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
+        val titleColumn = cursor.getColumnIndex(MediaStore.Video.Media.TITLE)
         val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
         val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
         val orientationColumn = cursor.getColumnIndex(MediaStore.Video.Media.ORIENTATION)
@@ -841,6 +853,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_MODIFIED)
 
         val id = cursor.getLong(idColumn)
+        val filename = cursor.getString(filenameColumn)
+        val title = cursor.getString(titleColumn)
         val width = cursor.getLong(widthColumn)
         val height = cursor.getLong(heightColumn)
         val orientation = cursor.getLong(orientationColumn)
@@ -857,6 +871,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         return mapOf(
             "id" to id.toString(),
+            "filename" to filename,
+            "title" to title,
             "mediumType" to videoType,
             "width" to width,
             "orientation" to orientationDegree2Value(orientation),

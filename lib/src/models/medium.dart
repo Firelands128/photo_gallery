@@ -8,6 +8,12 @@ class Medium {
   /// A unique identifier for the medium.
   final String id;
 
+  /// The medium filename.
+  final String? filename;
+
+  /// The medium title
+  final String? title;
+
   /// The medium type.
   final MediumType? mediumType;
 
@@ -34,6 +40,8 @@ class Medium {
 
   Medium({
     required this.id,
+    this.filename,
+    this.title,
     this.mediumType,
     this.width,
     this.height,
@@ -47,6 +55,8 @@ class Medium {
   /// Creates a medium from platform channel protocol.
   Medium.fromJson(dynamic json)
       : id = json["id"],
+        filename = json["filename"],
+        title = json["title"],
         mediumType = jsonToMediumType(json["mediumType"]),
         width = json["width"],
         height = json["height"],
@@ -63,6 +73,8 @@ class Medium {
   static Medium fromMap(Map map) {
     return Medium(
       id: map['id'],
+      filename: map['filename'],
+      title: map['title'],
       mediumType: jsonToMediumType(map['mediumType']),
       width: map['width'],
       height: map['height'],
@@ -76,6 +88,8 @@ class Medium {
   Map toMap() {
     return {
       "id": this.id,
+      "filename": this.filename,
+      "title": this.title,
       "mediumType": mediumTypeToJson(this.mediumType),
       "height": this.height,
       "orientation": this.orientation,
@@ -115,6 +129,8 @@ class Medium {
       other is Medium &&
           runtimeType == other.runtimeType &&
           id == other.id &&
+          filename == other.filename &&
+          title == other.title &&
           mediumType == other.mediumType &&
           width == other.width &&
           height == other.height &&
@@ -126,6 +142,8 @@ class Medium {
   @override
   int get hashCode =>
       id.hashCode ^
+      filename.hashCode ^
+      title.hashCode ^
       mediumType.hashCode ^
       width.hashCode ^
       height.hashCode ^
@@ -137,6 +155,8 @@ class Medium {
   @override
   String toString() {
     return 'Medium{id: $id, '
+        'filename: $filename, '
+        'title: $title, '
         'mediumType: $mediumType, '
         'width: $width, '
         'height: $height, '
