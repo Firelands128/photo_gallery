@@ -1,3 +1,9 @@
+## 1.1.1
+
+Fix a bug that "newest" argument is not working on Android 29 or below.
+
+Add "filename" and "title" property of Medium.
+
 ## 1.1.0
 
 Use Android contentResolver Bundle() only on sdk 30+.
