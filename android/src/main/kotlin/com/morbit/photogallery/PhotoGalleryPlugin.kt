@@ -74,9 +74,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Video.Media.DATE_TAKEN,
             MediaStore.Video.Media.DATE_MODIFIED
         )
-
-        const val imageOrderBy = "${MediaStore.Images.Media.DATE_TAKEN} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
-        const val videoOrderBy = "${MediaStore.Video.Media.DATE_TAKEN} DESC, ${MediaStore.Video.Media.DATE_MODIFIED} DESC"
     }
 
     private var context: Context? = null
@@ -327,12 +324,17 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     null
                 )
             } else {
+                val orderBy = if (newest) {
+                    "${MediaStore.Images.Media.DATE_TAKEN} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+                } else {
+                    "${MediaStore.Images.Media.DATE_TAKEN} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
+                }
                 imageCursor = this.contentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     imageMetadataProjection,
                     if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
                     null,
-                    "$imageOrderBy LIMIT $limit OFFSET $offset"
+                    "$orderBy LIMIT $limit OFFSET $offset"
                 )
             }
 
@@ -392,12 +394,17 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     null
                 )
             } else {
+                val orderBy = if (newest) {
+                    "${MediaStore.Images.Media.DATE_TAKEN} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+                } else {
+                    "${MediaStore.Images.Media.DATE_TAKEN} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
+                }
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                     videoMetadataProjection,
                     if (albumId == allAlbumId) null else "${MediaStore.Video.Media.BUCKET_ID} = $albumId",
                     null,
-                    "$videoOrderBy LIMIT $limit OFFSET $offset"
+                    "$orderBy LIMIT $limit OFFSET $offset"
                 )
             }
 
