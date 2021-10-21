@@ -51,6 +51,7 @@ final List<Album> imageAlbums = await PhotoGallery.listAlbums(
 );
 final List<Album> videoAlbums = await PhotoGallery.listAlbums(
     mediumType: mediumType.video,
+    hideIfEmpty: false
 );
 ```
 * Listing media in an album
@@ -75,6 +76,13 @@ if (!imagePage.isLast) {
     final nextImagePage = await imagePage.nextPage();
     // ...
 }
+```
+* Getting a Medium
+```dart
+final Medium medium = await PhotoGallery.getMedium(
+  mediumId: "10", 
+  MediumType: MediumType.image
+);
 ```
 * Getting a file
 ```dart
