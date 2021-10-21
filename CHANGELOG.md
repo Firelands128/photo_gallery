@@ -1,3 +1,11 @@
+## 1.1.0
+
+Use Android contentResolver Bundle() only on sdk 30+.
+
+Add "orientation" property of Medium to meet EXIF standard, but on iOS listing media API don't provide it.
+
+Update album name property to nullable.
+
 ## 1.0.1
 
 Add "mimeType" parameter in "getFile" API to allow specifying image format when get full image on both platforms.
