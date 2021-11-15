@@ -47,10 +47,10 @@ Add the following property to your *AndroidManifest.xml*, located in ```<project
 * Listing albums in the gallery
 ```dart
 final List<Album> imageAlbums = await PhotoGallery.listAlbums(
-    mediumType: mediumType.image,
+    mediumType: MediumType.image,
 );
 final List<Album> videoAlbums = await PhotoGallery.listAlbums(
-    mediumType: mediumType.video,
+    mediumType: MediumType.video,
     hideIfEmpty: false
 );
 ```
@@ -81,7 +81,7 @@ if (!imagePage.isLast) {
 ```dart
 final Medium medium = await PhotoGallery.getMedium(
   mediumId: "10", 
-  MediumType: MediumType.image
+  mediumType: MediumType.image
 );
 ```
 * Getting a file
