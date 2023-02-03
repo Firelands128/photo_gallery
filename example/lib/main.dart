@@ -287,7 +287,7 @@ class _VideoProviderState extends State<VideoProvider> {
                 aspectRatio: _controller!.value.aspectRatio,
                 child: VideoPlayer(_controller!),
               ),
-              FlatButton(
+              TextButton(
                 onPressed: () {
                   setState(() {
                     _controller!.value.isPlaying

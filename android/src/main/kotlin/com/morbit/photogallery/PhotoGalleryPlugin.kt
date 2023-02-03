@@ -297,33 +297,30 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 imageCursor = this.contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    MediaStore.Images.Media.getContentUri(
+                        MediaStore.VOLUME_EXTERNAL
+                    ),
                     imageMetadataProjection,
                     android.os.Bundle().apply {
-                        // Limit & Offset
-                        putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit)
-                        putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, offset)
-                        // Sort
-                        putStringArray(
-                            android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
-                            arrayOf(
-                                MediaStore.Images.Media.DATE_TAKEN,
-                                MediaStore.Images.Media.DATE_MODIFIED
-                            )
-                        )
-                        putInt(
-                            android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            if (newest) {
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
-                            } else {
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_ASCENDING
-                            }
-                        )
                         // Selection
                         if (albumId != allAlbumId) {
                             putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, "${MediaStore.Images.Media.BUCKET_ID} = ?")
                             putStringArray(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, arrayOf(albumId))
                         }
+                        // Sort
+                        putStringArray(
+                            android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                            arrayOf(MediaStore.Images.Media.DATE_TAKEN)
+
+                        )
+                        putInt(
+                            android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                        )
+                        // Limit & Offset
+                        putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit)
+                        putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, offset)
+
                     },
                     null
                 )
@@ -367,18 +364,21 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 videoCursor = this.contentResolver.query(
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    MediaStore.Images.Media.getContentUri(
+                        MediaStore.VOLUME_EXTERNAL
+                    ),
                     videoMetadataProjection,
                     android.os.Bundle().apply {
-                        // Limit & Offset
-                        putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit)
-                        putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, offset)
+                        // Selection
+                        if (albumId != allAlbumId) {
+                            putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, "${MediaStore.Video.Media.BUCKET_ID} = ?")
+                            putStringArray(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, arrayOf(albumId))
+                        }
                         // Sort
                         putStringArray(
                             android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
                             arrayOf(
-                                MediaStore.Video.Media.DATE_TAKEN,
-                                MediaStore.Video.Media.DATE_MODIFIED
+                                MediaStore.Video.Media.DATE_TAKEN
                             )
                         )
                         putInt(
@@ -389,11 +389,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                                 android.content.ContentResolver.QUERY_SORT_DIRECTION_ASCENDING
                             }
                         )
-                        // Selection
-                        if (albumId != allAlbumId) {
-                            putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, "${MediaStore.Video.Media.BUCKET_ID} = ?")
-                            putStringArray(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, arrayOf(albumId))
-                        }
+                        // Limit & Offset
+                        putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit)
+                        putInt(android.content.ContentResolver.QUERY_ARG_OFFSET, offset)
+
+
                     },
                     null
                 )
@@ -594,12 +594,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         // Limit
                         putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, 1)
                         // Sort
-                        putStringArray(
+                        putString(
                             android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
-                            arrayOf(
-                                MediaStore.Images.Media.DATE_TAKEN,
-                                MediaStore.Images.Media.DATE_MODIFIED
-                            )
+                            MediaStore.Images.Media.DATE_TAKEN
                         )
                         putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,

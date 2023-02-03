@@ -10,7 +10,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let instance = SwiftPhotoGalleryPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
-  
+
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     if(call.method == "listAlbums") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -87,25 +87,25 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       result(FlutterMethodNotImplemented)
     }
   }
-  
+
   private var assetCollections : [PHAssetCollection]  = []
-  
+
   private func listAlbums(mediumType: String, hideIfEmpty: Bool? = true) -> [NSDictionary] {
     self.assetCollections = []
     let fetchOptions = PHFetchOptions()
     var total = 0
     var albums = [NSDictionary]()
     var albumIds = Set<String>()
-    
+
     func addCollection (collection: PHAssetCollection, hideIfEmpty: Bool) -> Void {
       let kRecentlyDeletedCollectionSubtype = PHAssetCollectionSubtype(rawValue: 1000000201)
       guard collection.assetCollectionSubtype != kRecentlyDeletedCollectionSubtype else { return }
-      
+
       // De-duplicate by id.
       let albumId = collection.localIdentifier
       guard !albumIds.contains(albumId) else { return }
       albumIds.insert(albumId)
-      
+
       let options = PHFetchOptions()
       options.predicate = self.predicateFromMediumType(mediumType: mediumType)
       if #available(iOS 9, *) {
@@ -123,13 +123,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         ])
       }
     }
-    
+
     func processPHAssetCollections(fetchResult: PHFetchResult<PHAssetCollection>, hideIfEmpty: Bool) -> Void {
       fetchResult.enumerateObjects { (assetCollection, _, _) in
         addCollection(collection: assetCollection, hideIfEmpty: hideIfEmpty)
       }
     }
-    
+
     func processPHCollections (fetchResult: PHFetchResult<PHCollection>, hideIfEmpty: Bool) -> Void {
       fetchResult.enumerateObjects { (collection, _, _) in
         if let assetCollection = collection as? PHAssetCollection {
@@ -139,39 +139,39 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         }
       }
     }
-    
+
     // Smart Albums.
     processPHAssetCollections(
       fetchResult: PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .albumRegular, options: fetchOptions),
       hideIfEmpty: hideIfEmpty ?? true
     )
-    
+
     // User-created collections.
     processPHCollections(
       fetchResult: PHAssetCollection.fetchTopLevelUserCollections(with: fetchOptions),
       hideIfEmpty: hideIfEmpty ?? true
     )
-    
+
     albums.insert([
       "id": "__ALL__",
       "mediumType": mediumType,
       "name": "All",
       "count" : countMedia(collection: nil, mediumTypes: [mediumType]),
     ], at: 0)
-    
+
     return albums
   }
-  
+
   private func countMedia(collection: PHAssetCollection?, mediumTypes: [String]) -> Int {
     let options = PHFetchOptions()
     options.predicate = self.predicateFromMediumTypes(mediumTypes: mediumTypes)
     if(collection == nil) {
       return PHAsset.fetchAssets(with: options).count
     }
-    
+
     return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
-  
+
   private func listMedia(albumId: String, mediumType: String, newest: Bool, skip: NSNumber?, take: NSNumber?) -> NSDictionary {
     let fetchOptions = PHFetchOptions()
     fetchOptions.sortDescriptors = [
@@ -179,11 +179,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       NSSortDescriptor(key: "modificationDate", ascending: newest ? false : true)
     ]
     fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
-    
+
     let collection = self.assetCollections.first(where: { (collection) -> Bool in
       collection.localIdentifier == albumId
     })
-    
+
     let fetchResult = albumId == "__ALL__"
       ? PHAsset.fetchAssets(with: fetchOptions)
       : PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: fetchOptions)
@@ -195,7 +195,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let asset = fetchResult.object(at: index) as PHAsset
       items.append(getMediumFromAsset(asset: asset))
     }
-    
+
     return [
       "newest": newest,
       "start": start,
@@ -203,14 +203,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "items": items,
     ]
   }
-  
+
   private func getMedium(mediumId: String, completion: @escaping ([String : Any?]?, Error?) -> Void) {
     let fetchOptions = PHFetchOptions()
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1
     }
     let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
-    
+
     if (assets.count <= 0) {
       completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
     } else {
@@ -223,7 +223,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       )
     }
   }
-  
+
   private func getThumbnail(
     mediumId: String,
     width: NSNumber?,
@@ -237,20 +237,20 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       fetchOptions.fetchLimit = 1
     }
     let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
-    
+
     if (assets.count > 0) {
       let asset: PHAsset = assets[0]
-      
+
       let options = PHImageRequestOptions()
       options.isSynchronous = false
       options.version = .current
       options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
       options.isNetworkAccessAllowed = true
-      
+
       let imageSize = CGSize(width: width?.intValue ?? 128, height: height?.intValue ?? 128)
       manager.requestImage(
         for: asset,
-        targetSize: CGSize(width: imageSize.width *  UIScreen.main.scale, height: imageSize.height *  UIScreen.main.scale),
+        targetSize: CGSize(width: imageSize.width, height: imageSize.height),
         contentMode: PHImageContentMode.aspectFill,
         options: options,
         resultHandler: {(uiImage: UIImage?, info) in
@@ -263,10 +263,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       })
       return
     }
-    
+
     completion(nil , NSError(domain: "photo_gallery", code: 404, userInfo: nil))
   }
-  
+
   private func getAlbumThumbnail(
     albumId: String,
     mediumType: String?,
@@ -287,22 +287,22 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1
     }
-    
+
     let assets = albumId == "__ALL__" ?
       PHAsset.fetchAssets(with: fetchOptions) :
       PHAsset.fetchAssets(in: self.assetCollections.first(where: { (collection) -> Bool in
         collection.localIdentifier == albumId
       })!, options: fetchOptions)
-    
+
     if (assets.count > 0) {
       let asset: PHAsset = assets[0]
-      
+
       let options = PHImageRequestOptions()
       options.isSynchronous = false
       options.version = .current
       options.deliveryMode = (highQuality ?? false) ? .highQualityFormat : .fastFormat
       options.isNetworkAccessAllowed = true
-      
+
       let imageSize = CGSize(width: width ?? 128, height: height ?? 128)
       manager.requestImage(
         for: asset,
@@ -322,19 +322,19 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       })
       return
     }
-    
+
     completion(nil , NSError(domain: "photo_gallery", code: 404, userInfo: nil))
   }
-  
+
   private func getFile(mediumId: String, mimeType: String?, completion: @escaping (String?, Error?) -> Void) {
     let manager = PHImageManager.default()
-    
+
     let fetchOptions = PHFetchOptions()
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1
     }
     let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
-    
+
     if (assets.count > 0) {
       let asset: PHAsset = assets[0]
       if(asset.mediaType == PHAssetMediaType.image) {
@@ -343,7 +343,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         options.version = .current
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
-        
+
         manager.requestImageData(
           for: asset,
           options: options,
@@ -378,7 +378,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         options.version = .current
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
-        
+
         manager.requestAVAsset(forVideo: asset, options: options, resultHandler: { (avAsset, avAudioMix, info) in
           DispatchQueue.main.async(execute: {
             do {
@@ -397,7 +397,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       }
     }
   }
-  
+
   private func cacheImage(asset: PHAsset, data: Data, mimeType: String) -> String? {
     if mimeType == "image/jpeg" {
       let filepath = self.exportPathForAsset(asset: asset, ext: ".jpeg")
@@ -430,7 +430,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
   }
-  
+
   private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
@@ -463,7 +463,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let cachePath = self.cachePath()
     return cachePath.appendingPathComponent(mediumId + ext)
   }
-  
+
   private func toSwiftMediumType(value: String) -> PHAssetMediaType? {
     switch value {
     case "image": return PHAssetMediaType.image
@@ -472,7 +472,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     default: return nil
     }
   }
-  
+
   private func toDartMediumType(value: PHAssetMediaType) -> String? {
     switch value {
     case PHAssetMediaType.image: return "image"
@@ -481,7 +481,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     default: return nil
     }
   }
-  
+
   private func toOrientationValue(orientation: UIImage.Orientation) -> Int {
     switch orientation {
     case UIImage.Orientation.up:
@@ -504,14 +504,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       return 0
     }
   }
-  
+
   private func predicateFromMediumTypes(mediumTypes: [String]) -> NSPredicate {
     let predicates = mediumTypes.map { (dartValue) -> NSPredicate in
       return predicateFromMediumType(mediumType: dartValue)
     }
     return NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.or, subpredicates: predicates)
   }
-  
+
   private func predicateFromMediumType(mediumType: String) -> NSPredicate {
     let swiftType = toSwiftMediumType(value: mediumType)
     return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
@@ -526,7 +526,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return "." + ext
   }
-  
+
   private func extractMimeTypeFromUTI(uti: String?) -> String? {
     guard let assetUTI = uti else {
       return nil
@@ -536,7 +536,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return mimeType
   }
-  
+
   private func extractUTIFromAsset(asset: PHAsset) -> String? {
     if #available(iOS 9, *) {
       let resourceList = PHAssetResource.assetResources(for: asset)
@@ -546,17 +546,17 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return asset.value(forKey: "uniformTypeIdentifier") as? String
   }
-  
+
   private func extractFileExtensionFromAsset(asset: PHAsset) -> String {
     let uti = self.extractUTIFromAsset(asset: asset)
     return self.extractFileExtensionFromUTI(uti: uti)
   }
-  
+
   private func extractMimeTypeFromAsset(asset: PHAsset) -> String? {
     let uti = self.extractUTIFromAsset(asset: asset)
     return self.extractMimeTypeFromUTI(uti: uti)
   }
-  
+
   private func extractFilenameFromAsset(asset: PHAsset) -> String? {
     if #available(iOS 9.0, *) {
       let resources = PHAssetResource.assetResources(for: asset)
@@ -566,21 +566,21 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return asset.value(forKey: "filename") as? String
   }
-  
+
   private func extractTitleFromFilename(filename: String?) -> String? {
     if let name = filename {
       return (name as NSString).deletingPathExtension
     }
     return nil
   }
-  
+
   private func cachePath() -> URL {
     let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
     let cacheFolder = paths[0].appendingPathComponent("photo_gallery")
     try! FileManager.default.createDirectory(at: cacheFolder, withIntermediateDirectories: true, attributes: nil)
     return cacheFolder
   }
-  
+
   private func cleanCache() {
     try? FileManager.default.removeItem(at: self.cachePath())
   }

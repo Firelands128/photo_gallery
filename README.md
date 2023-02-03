@@ -47,10 +47,10 @@ Add the following property to your *AndroidManifest.xml*, located in ```<project
 * Listing albums in the gallery
 ```dart
 final List<Album> imageAlbums = await PhotoGallery.listAlbums(
-    mediumType: MediumType.image,
+    mediumType: mediumType.image,
 );
 final List<Album> videoAlbums = await PhotoGallery.listAlbums(
-    mediumType: MediumType.video,
+    mediumType: mediumType.video,
     hideIfEmpty: false
 );
 ```
