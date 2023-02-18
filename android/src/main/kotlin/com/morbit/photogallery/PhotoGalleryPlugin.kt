@@ -314,7 +314,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         )
                         putInt(
                             android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            if (newest) {
+                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            } else {
+                                android.content.ContentResolver.QUERY_SORT_DIRECTION_ASCENDING
+                            }
                         )
                         // Limit & Offset
                         putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit)
@@ -599,12 +603,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         }
                         // Sort
                         putStringArray(
-                                android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
-                                arrayOf(MediaStore.Images.Media.DATE_TAKEN)
+                            android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                            arrayOf(MediaStore.Images.Media.DATE_TAKEN)
                         )
                         putInt(
-                                android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                                android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                            android.content.ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                            android.content.ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
                         )
                         // Limit
                         putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, 1)
