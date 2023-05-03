@@ -72,7 +72,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Video.Media.TITLE,
             MediaStore.Video.Media.WIDTH,
             MediaStore.Video.Media.HEIGHT,
-            MediaStore.Video.Media.ORIENTATION,
             MediaStore.Video.Media.MIME_TYPE,
             MediaStore.Video.Media.DURATION,
             MediaStore.Video.Media.DATE_TAKEN,
@@ -846,7 +845,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val titleColumn = cursor.getColumnIndex(MediaStore.Video.Media.TITLE)
         val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
         val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
-        val orientationColumn = cursor.getColumnIndex(MediaStore.Video.Media.ORIENTATION)
         val mimeColumn = cursor.getColumnIndex(MediaStore.Video.Media.MIME_TYPE)
         val durationColumn = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
         val dateTakenColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_TAKEN)
@@ -857,7 +855,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val title = cursor.getString(titleColumn)
         val width = cursor.getLong(widthColumn)
         val height = cursor.getLong(heightColumn)
-        val orientation = cursor.getLong(orientationColumn)
         val mimeType = cursor.getString(mimeColumn)
         val duration = cursor.getLong(durationColumn)
         var dateTaken: Long? = null
@@ -875,7 +872,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "title" to title,
             "mediumType" to videoType,
             "width" to width,
-            "orientation" to orientationDegree2Value(orientation),
             "height" to height,
             "mimeType" to mimeType,
             "duration" to duration,
