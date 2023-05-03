@@ -80,7 +80,7 @@ if (!imagePage.isLast) {
 * Getting a Medium
 ```dart
 final Medium medium = await PhotoGallery.getMedium(
-  mediumId: "10", 
+  mediumId: "10",
   mediumType: MediumType.image
 );
 ```

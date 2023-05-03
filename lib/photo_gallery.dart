@@ -29,7 +29,7 @@ class PhotoGallery {
   }) async {
     final json = await _channel.invokeMethod('listAlbums', {
       'mediumType': mediumTypeToJson(mediumType),
-      'hideIfEmpty': hideIfEmpty
+      'hideIfEmpty': hideIfEmpty,
     });
     return json.map<Album>((x) => Album.fromJson(x)).toList();
   }
