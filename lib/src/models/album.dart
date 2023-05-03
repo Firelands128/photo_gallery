@@ -46,7 +46,7 @@ class Album {
   /// Get thumbnail data for this album.
   ///
   /// It will display the lastly taken medium thumbnail.
-  Future<List<int>> getThumbnail({
+  Future<List<int>?> getThumbnail({
     int? width,
     int? height,
     bool? highQuality = false,

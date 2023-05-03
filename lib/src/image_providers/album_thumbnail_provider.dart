@@ -17,7 +17,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   final bool? highQuality;
 
   @override
-  ImageStreamCompleter load(key, decode) {
+  ImageStreamCompleter loadBuffer(key, decode) {
     return MultiFrameImageStreamCompleter(
       codec: _loadAsync(key, decode),
       scale: 1.0,
@@ -27,17 +27,22 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
     );
   }
 
-  Future<ui.Codec> _loadAsync(
-      AlbumThumbnailProvider key, DecoderCallback decode) async {
+  Future<ui.Codec> _loadAsync(AlbumThumbnailProvider key, DecoderBufferCallback decode) async {
     assert(key == this);
-    final bytes = await PhotoGallery.getAlbumThumbnail(
+    final data = await PhotoGallery.getAlbumThumbnail(
       albumId: albumId,
       mediumType: mediumType,
       height: height,
       width: width,
       highQuality: highQuality,
     );
-    return await decode(Uint8List.fromList(bytes));
+    ui.ImmutableBuffer buffer;
+    if (data != null) {
+      buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
+    } else {
+      buffer = await ui.ImmutableBuffer.fromAsset("packages/photo_gallery/images/grey.bmp");
+    }
+    return decode(buffer);
   }
 
   @override
