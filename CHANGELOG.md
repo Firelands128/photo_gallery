@@ -1,3 +1,11 @@
+## 1.2.0
+
+Upgrade versions of flutter, android sdk, kotlin, gradle and so on.
+
+Remove ORIENTATION field of video metadata because it's invalid before Android 10.
+
+Add default album thumbnail to show when album is empty.
+
 ## 1.1.1
 
 Fix a bug that "newest" argument is not working on Android 29 or below.
