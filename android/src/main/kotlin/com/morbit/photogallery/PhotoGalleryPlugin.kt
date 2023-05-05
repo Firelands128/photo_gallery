@@ -63,7 +63,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Images.Media.SIZE,
             MediaStore.Images.Media.ORIENTATION,
             MediaStore.Images.Media.MIME_TYPE,
-            MediaStore.Images.Media.DATE_TAKEN,
+            MediaStore.Images.Media.DATE_ADDED,
             MediaStore.Images.Media.DATE_MODIFIED
         )
 
@@ -76,7 +76,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Video.Media.SIZE,
             MediaStore.Video.Media.MIME_TYPE,
             MediaStore.Video.Media.DURATION,
-            MediaStore.Video.Media.DATE_TAKEN,
+            MediaStore.Video.Media.DATE_ADDED,
             MediaStore.Video.Media.DATE_MODIFIED
         )
     }
@@ -308,7 +308,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         putStringArray(
                             android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
                             arrayOf(
-                                MediaStore.Images.Media.DATE_TAKEN,
+                                MediaStore.Images.Media.DATE_ADDED,
                                 MediaStore.Images.Media.DATE_MODIFIED
                             )
                         )
@@ -330,9 +330,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 )
             } else {
                 val orderBy = if (newest) {
-                    "${MediaStore.Images.Media.DATE_TAKEN} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+                    "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
                 } else {
-                    "${MediaStore.Images.Media.DATE_TAKEN} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
+                    "${MediaStore.Images.Media.DATE_ADDED} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
                 }
                 imageCursor = this.contentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -378,7 +378,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         putStringArray(
                             android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
                             arrayOf(
-                                MediaStore.Video.Media.DATE_TAKEN,
+                                MediaStore.Video.Media.DATE_ADDED,
                                 MediaStore.Video.Media.DATE_MODIFIED
                             )
                         )
@@ -400,9 +400,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 )
             } else {
                 val orderBy = if (newest) {
-                    "${MediaStore.Images.Media.DATE_TAKEN} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+                    "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
                 } else {
-                    "${MediaStore.Images.Media.DATE_TAKEN} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
+                    "${MediaStore.Images.Media.DATE_ADDED} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
                 }
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
@@ -598,7 +598,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         putStringArray(
                             android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
                             arrayOf(
-                                MediaStore.Images.Media.DATE_TAKEN,
+                                MediaStore.Images.Media.DATE_ADDED,
                                 MediaStore.Images.Media.DATE_MODIFIED
                             )
                         )
@@ -620,7 +620,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     arrayOf(MediaStore.Images.Media._ID),
                     if (albumId == allAlbumId) null else "${MediaStore.Images.Media.BUCKET_ID} = $albumId",
                     null,
-                    MediaStore.Images.Media.DATE_TAKEN + " DESC LIMIT 1"
+                    MediaStore.Images.Media.DATE_ADDED + " DESC LIMIT 1"
                 )
             }
 
@@ -651,7 +651,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         putStringArray(
                             android.content.ContentResolver.QUERY_ARG_SORT_COLUMNS,
                             arrayOf(
-                                MediaStore.Video.Media.DATE_TAKEN,
+                                MediaStore.Video.Media.DATE_ADDED,
                                 MediaStore.Video.Media.DATE_MODIFIED
                             )
                         )
@@ -673,7 +673,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     arrayOf(MediaStore.Video.Media._ID),
                     if (albumId == allAlbumId) null else "${MediaStore.Video.Media.BUCKET_ID} = $albumId",
                     null,
-                    MediaStore.Video.Media.DATE_TAKEN + " DESC LIMIT 1"
+                    MediaStore.Video.Media.DATE_ADDED + " DESC LIMIT 1"
                 )
             }
 
@@ -809,7 +809,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val sizeColumn = cursor.getColumnIndex(MediaStore.Images.Media.SIZE)
         val orientationColumn = cursor.getColumnIndex(MediaStore.Images.Media.ORIENTATION)
         val mimeColumn = cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE)
-        val dateTakenColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
+        val dateAddedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED)
         val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED)
 
         val id = cursor.getLong(idColumn)
@@ -820,9 +820,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val size = cursor.getLong(sizeColumn)
         val orientation = cursor.getLong(orientationColumn)
         val mimeType = cursor.getString(mimeColumn)
-        var dateTaken: Long? = null
-        if (cursor.getType(dateTakenColumn) == FIELD_TYPE_INTEGER) {
-            dateTaken = cursor.getLong(dateTakenColumn)
+        var dateAdded: Long? = null
+        if (cursor.getType(dateAddedColumn) == FIELD_TYPE_INTEGER) {
+            dateAdded = cursor.getLong(dateAddedColumn) * 1000
         }
         var dateModified: Long? = null
         if (cursor.getType(dateModifiedColumn) == FIELD_TYPE_INTEGER) {
@@ -839,7 +839,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "size" to size,
             "orientation" to orientationDegree2Value(orientation),
             "mimeType" to mimeType,
-            "creationDate" to dateTaken,
+            "creationDate" to dateAdded,
             "modifiedDate" to dateModified
         )
     }
@@ -853,7 +853,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val sizeColumn = cursor.getColumnIndex(MediaStore.Video.Media.SIZE)
         val mimeColumn = cursor.getColumnIndex(MediaStore.Video.Media.MIME_TYPE)
         val durationColumn = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
-        val dateTakenColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_TAKEN)
+        val dateAddedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED)
         val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_MODIFIED)
 
         val id = cursor.getLong(idColumn)
@@ -864,9 +864,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val size = cursor.getLong(sizeColumn)
         val mimeType = cursor.getString(mimeColumn)
         val duration = cursor.getLong(durationColumn)
-        var dateTaken: Long? = null
-        if (cursor.getType(dateTakenColumn) == FIELD_TYPE_INTEGER) {
-            dateTaken = cursor.getLong(dateTakenColumn)
+        var dateAdded: Long? = null
+        if (cursor.getType(dateAddedColumn) == FIELD_TYPE_INTEGER) {
+            dateAdded = cursor.getLong(dateAddedColumn) * 1000
         }
         var dateModified: Long? = null
         if (cursor.getType(dateModifiedColumn) == FIELD_TYPE_INTEGER) {
@@ -883,7 +883,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "size" to size,
             "mimeType" to mimeType,
             "duration" to duration,
-            "creationDate" to dateTaken,
+            "creationDate" to dateAdded,
             "modifiedDate" to dateModified
         )
     }
