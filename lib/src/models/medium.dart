@@ -23,6 +23,9 @@ class Medium {
   /// The medium height.
   final int? height;
 
+  /// The medium size.
+  final int? size;
+
   /// The medium orientation.
   final int? orientation;
 
@@ -45,6 +48,7 @@ class Medium {
     this.mediumType,
     this.width,
     this.height,
+    this.size,
     this.orientation = 0,
     this.mimeType,
     this.duration = 0,
@@ -60,6 +64,7 @@ class Medium {
         mediumType = jsonToMediumType(json["mediumType"]),
         width = json["width"],
         height = json["height"],
+        size = json["size"],
         orientation = json["orientation"],
         mimeType = json["mimeType"],
         duration = json['duration'] ?? 0,

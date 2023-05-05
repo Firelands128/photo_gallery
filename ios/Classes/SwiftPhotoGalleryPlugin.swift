@@ -417,6 +417,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
+		let size = self.extractSizeFromAsset(asset: asset)
     return [
       "id": asset.localIdentifier,
       "filename": filename,
@@ -425,6 +426,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "mimeType": mimeType,
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
+			"size": size,
       "duration": NSInteger(asset.duration * 1000),
       "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
@@ -434,6 +436,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
+		let size = self.extractSizeFromAsset(asset: asset)
     let manager = PHImageManager.default()
     manager.requestImageData(
       for: asset,
@@ -447,6 +450,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           "mimeType": mimeType,
           "height": asset.pixelHeight,
           "width": asset.pixelWidth,
+	      	"size": size,
           "orientation": self.toOrientationValue(orientation: orientation),
           "duration": NSInteger(asset.duration * 1000),
           "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
@@ -565,6 +569,15 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       }
     }
     return asset.value(forKey: "filename") as? String
+  }
+
+  private func extractSizeFromAsset(asset: PHAsset) -> Int64? {
+		let resources = PHAssetResource.assetResources(for: asset)
+		guard let resource = resources.first,
+					let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong else {
+			return nil
+		}
+		return Int64(bitPattern: UInt64(unsignedInt64))
   }
   
   private func extractTitleFromFilename(filename: String?) -> String? {
