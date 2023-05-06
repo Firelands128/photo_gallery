@@ -1,3 +1,11 @@
+## 1.2.1
+
+Change DATE_TAKEN to DATE_ADDED of media column in android code.
+
+Add size property of medium.
+
+Update AndroidManifest.xml with removing requestLegacyExternalStorage flag and SplashScreen meta-data tag.
+
 ## 1.2.0
 
 Upgrade versions of flutter, android sdk, kotlin, gradle and so on.
