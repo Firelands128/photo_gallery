@@ -1,3 +1,11 @@
+## 1.2.2
+
+Upgrade deprecated code.
+
+Use QUERY_ARG_SQL_SORT_ORDER in contentResolver.query to fix sorting bug after Android 11.
+
+Upgrade Android compileSdkVersion to 33.
+
 ## 1.2.1
 
 Change DATE_TAKEN to DATE_ADDED of media column in android code.
