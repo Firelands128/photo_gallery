@@ -426,8 +426,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 imageMetadataProjection,
-                "${MediaStore.Images.Media._ID} = $mediumId",
-                null,
+                "${MediaStore.Images.Media._ID} = ?",
+                arrayOf(mediumId),
                 null
             )
 
@@ -448,9 +448,10 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 videoMetadataProjection,
-                "${MediaStore.Images.Media._ID} = $mediumId",
-                null,
-                null)
+                "${MediaStore.Video.Media._ID} = ?",
+                arrayOf(mediumId),
+                null
+            )
 
             videoCursor?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -528,10 +529,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     null
                 }
             } else {
-                val kind = if (highQuality == true) MediaStore.Images.Thumbnails.MINI_KIND else MediaStore.Images.Thumbnails.MICRO_KIND
+                val kind =
+                    if (highQuality == true) MediaStore.Video.Thumbnails.MINI_KIND else MediaStore.Video.Thumbnails.MICRO_KIND
                 MediaStore.Video.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
-                    kind,null
+                    kind, null
                 )
             }
         }
@@ -672,7 +674,10 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         this.context?.run {
             mimeType?.let {
                 val type = this.contentResolver.getType(
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong())
+                    ContentUris.withAppendedId(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        mediumId.toLong()
+                    )
                 )
                 if (it != type) {
                     return cacheImage(mediumId, it)
@@ -682,8 +687,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Images.Media.DATA),
-                "${MediaStore.Images.Media._ID} = $mediumId",
-                null,
+                "${MediaStore.Images.Media._ID} = ?",
+                arrayOf(mediumId),
                 null
             )
 
@@ -704,10 +709,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         this.context?.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                arrayOf(MediaStore.Images.Media.DATA),
-                "${MediaStore.Images.Media._ID} = $mediumId",
-                null,
-                null)
+                arrayOf(MediaStore.Video.Media.DATA),
+                "${MediaStore.Video.Media._ID} = ?",
+                arrayOf(mediumId),
+                null
+            )
 
             videoCursor?.use { cursor ->
                 if (cursor.moveToNext()) {
