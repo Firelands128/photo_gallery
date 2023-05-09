@@ -2,6 +2,14 @@ package com.morbit.photogallery
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.Context
+import android.database.Cursor
+import android.database.Cursor.FIELD_TYPE_INTEGER
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Size
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -9,28 +17,14 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
-import android.graphics.Bitmap
 import java.io.ByteArrayOutputStream
 import java.io.File
-import android.provider.MediaStore
-import android.content.Context
-import android.database.Cursor
-import android.database.Cursor.FIELD_TYPE_INTEGER
-import android.graphics.ImageDecoder
-import android.os.AsyncTask
-import android.os.Build
-import android.util.Size
 import java.io.FileOutputStream
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /** PhotoGalleryPlugin */
 class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
-    override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        val channel = MethodChannel(flutterPluginBinding.binaryMessenger, "photo_gallery")
-        val plugin = PhotoGalleryPlugin()
-        plugin.context = flutterPluginBinding.applicationContext
-        channel.setMethodCallHandler(plugin)
-    }
-
     companion object {
         // This static function is optional and equivalent to onAttachedToEngine. It supports the old
         // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
@@ -82,17 +76,31 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         )
     }
 
-    private var context: Context? = null
+    private lateinit var channel: MethodChannel
+    private lateinit var context: Context
+
+    private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "photo_gallery")
+        val plugin = PhotoGalleryPlugin()
+        plugin.context = flutterPluginBinding.applicationContext
+        channel.setMethodCallHandler(plugin)
+    }
+
+    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        channel.setMethodCallHandler(null)
+    }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
             "listAlbums" -> {
                 val mediumType = call.argument<String>("mediumType")
-                BackgroundAsyncTask({
-                    listAlbums(mediumType!!)
-                }, { v ->
-                    result.success(v)
-                })
+                executor.submit {
+                    result.success(
+                        listAlbums(mediumType!!)
+                    )
+                }
             }
             "listMedia" -> {
                 val albumId = call.argument<String>("albumId")
@@ -101,24 +109,24 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val total = call.argument<Int>("total")
                 val skip = call.argument<Int>("skip")
                 val take = call.argument<Int>("take")
-                BackgroundAsyncTask({
-                    when (mediumType) {
-                        imageType -> listImages(albumId!!, newest!!, total!!, skip, take)
-                        videoType -> listVideos(albumId!!, newest!!, total!!, skip, take)
-                        else -> null
-                    }
-                }, { v ->
-                    result.success(v)
-                })
+                executor.submit {
+                    result.success(
+                        when (mediumType) {
+                            imageType -> listImages(albumId!!, newest!!, total!!, skip, take)
+                            videoType -> listVideos(albumId!!, newest!!, total!!, skip, take)
+                            else -> null
+                        }
+                    )
+                }
             }
             "getMedium" -> {
                 val mediumId = call.argument<String>("mediumId")
                 val mediumType = call.argument<String>("mediumType")
-                BackgroundAsyncTask({
-                    getMedium(mediumId!!, mediumType)
-                }, { v ->
-                    result.success(v)
-                })
+                executor.submit {
+                    result.success(
+                        getMedium(mediumId!!, mediumType)
+                    )
+                }
             }
             "getThumbnail" -> {
                 val mediumId = call.argument<String>("mediumId")
@@ -126,11 +134,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
                 val highQuality = call.argument<Boolean>("highQuality")
-                BackgroundAsyncTask({
-                    getThumbnail(mediumId!!, mediumType, width, height, highQuality)
-                }, { v ->
-                    result.success(v)
-                })
+                executor.submit {
+                    result.success(
+                        getThumbnail(mediumId!!, mediumType, width, height, highQuality)
+                    )
+                }
             }
             "getAlbumThumbnail" -> {
                 val albumId = call.argument<String>("albumId")
@@ -138,32 +146,31 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
                 val highQuality = call.argument<Boolean>("highQuality")
-                BackgroundAsyncTask({
-                    getAlbumThumbnail(albumId!!, mediumType, width, height, highQuality)
-                }, { v ->
-                    result.success(v)
-                })
+                executor.submit {
+                    result.success(
+                        getAlbumThumbnail(albumId!!, mediumType, width, height, highQuality)
+                    )
+                }
             }
             "getFile" -> {
                 val mediumId = call.argument<String>("mediumId")
                 val mediumType = call.argument<String>("mediumType")
                 val mimeType = call.argument<String>("mimeType")
-                BackgroundAsyncTask({
-                    getFile(mediumId!!, mediumType, mimeType)
-                }, { v ->
-                    result.success(v)
-                })
+                executor.submit {
+                    result.success(
+                        getFile(mediumId!!, mediumType, mimeType)
+                    )
+                }
             }
             "cleanCache" -> {
-                cleanCache()
-                result.success(null)
+                executor.submit {
+                    result.success(
+                        cleanCache()
+                    )
+                }
             }
             else -> result.notImplemented()
         }
-    }
-
-    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-
     }
 
     private fun listAlbums(mediumType: String): List<Map<String, Any>> {
@@ -181,7 +188,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun listImageAlbums(): List<Map<String, Any>> {
-        this.context?.run {
+        this.context.run {
             var total = 0
             val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
 
@@ -237,7 +244,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun listVideoAlbums(): List<Map<String, Any>> {
-        this.context?.run {
+        this.context.run {
             var total = 0
             val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
 
@@ -294,7 +301,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val offset = skip ?: 0
         val limit = take ?: (total - offset)
 
-        this.context?.run {
+        this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
             val selectionArgs = if (isSelection) arrayOf(albumId) else null
@@ -352,7 +359,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val offset = skip ?: 0
         val limit = take ?: (total - offset)
 
-        this.context?.run {
+        this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Video.Media.BUCKET_ID} = ?" else null
             val selectionArgs = if (isSelection) arrayOf(albumId) else null
@@ -422,7 +429,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun getImageMedia(mediumId: String): Map<String, Any?>? {
         var imageMetadata: Map<String, Any?>? = null
 
-        this.context?.run {
+        this.context.run {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 imageMetadataProjection,
@@ -444,7 +451,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun getVideoMedia(mediumId: String): Map<String, Any?>? {
         var videoMetadata: Map<String, Any?>? = null
 
-        this.context?.run {
+        this.context.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 videoMetadataProjection,
@@ -481,7 +488,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun getImageThumbnail(mediumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         var byteArray: ByteArray? = null
 
-        val bitmap: Bitmap? = this.context?.run {
+        val bitmap: Bitmap? = this.context.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 try {
                     val widthSize = width ?: if (highQuality == true) 512 else 96
@@ -515,7 +522,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun getVideoThumbnail(mediumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         var byteArray: ByteArray? = null
 
-        val bitmap: Bitmap? = this.context?.run {
+        val bitmap: Bitmap? = this.context.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 try {
                     val widthSize = width ?: if (highQuality == true) 512 else 96
@@ -563,7 +570,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getImageAlbumThumbnail(albumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
-        return this.context?.run {
+        return this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
             val selectionArgs = if (isSelection) arrayOf(albumId) else null
@@ -610,7 +617,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getVideoAlbumThumbnail(albumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
-        return this.context?.run {
+        return this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Video.Media.BUCKET_ID} = ?" else null
             val selectionArgs = if (isSelection) arrayOf(albumId) else null
@@ -671,7 +678,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getImageFile(mediumId: String, mimeType: String? = null): String? {
-        this.context?.run {
+        this.context.run {
             mimeType?.let {
                 val type = this.contentResolver.getType(
                     ContentUris.withAppendedId(
@@ -706,7 +713,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun getVideoFile(mediumId: String): String? {
         var path: String? = null
 
-        this.context?.run {
+        this.context.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Video.Media.DATA),
@@ -727,7 +734,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun cacheImage(mediumId: String, mimeType: String): String? {
-        val bitmap: Bitmap? = this.context?.run {
+        val bitmap: Bitmap? = this.context.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 try {
                     ImageDecoder.decodeBitmap(ImageDecoder.createSource(
@@ -762,7 +769,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             } else if (mimeType == "image/webp") {
                 val path = File(getCachePath(), "$mediumId.webp")
                 val out = FileOutputStream(path)
-                compressFormat = Bitmap.CompressFormat.WEBP
+                compressFormat = Bitmap.CompressFormat.WEBP_LOSSLESS
                 it.compress(compressFormat, 100, out)
                 return path.absolutePath
             }
@@ -870,7 +877,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getCachePath(): File? {
-        return this.context?.run {
+        return this.context.run {
             val cachePath = File(this.cacheDir, "photo_gallery")
             if (!cachePath.exists()) {
                 cachePath.mkdirs()
@@ -882,21 +889,5 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     private fun cleanCache() {
         val cachePath = getCachePath()
         cachePath?.deleteRecursively()
-    }
-}
-
-class BackgroundAsyncTask<T>(val handler: () -> T, val post: (result: T) -> Unit) : AsyncTask<Void, Void, T>() {
-    init {
-        execute()
-    }
-
-    override fun doInBackground(vararg params: Void?): T {
-        return handler()
-    }
-
-    override fun onPostExecute(result: T) {
-        super.onPostExecute(result)
-        post(result)
-        return
     }
 }
