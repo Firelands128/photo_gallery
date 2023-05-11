@@ -98,7 +98,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val mediumType = call.argument<String>("mediumType")
                 executor.submit {
                     result.success(
-                        listAlbums(mediumType!!)
+                        listAlbums(mediumType)
                     )
                 }
             }
@@ -111,11 +111,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val take = call.argument<Int>("take")
                 executor.submit {
                     result.success(
-                        when (mediumType) {
-                            imageType -> listImages(albumId!!, newest!!, total!!, skip, take)
-                            videoType -> listVideos(albumId!!, newest!!, total!!, skip, take)
-                            else -> null
-                        }
+                        listMedia(mediumType, albumId!!, newest!!, total!!, skip, take)
                     )
                 }
             }
@@ -173,24 +169,24 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun listAlbums(mediumType: String): List<Map<String, Any>> {
+    private fun listAlbums(mediumType: String?): List<Map<String, Any?>> {
         return when (mediumType) {
             imageType -> {
-                listImageAlbums()
+                listImageAlbums().values.toList()
             }
             videoType -> {
-                listVideoAlbums()
+                listVideoAlbums().values.toList()
             }
             else -> {
-                listOf()
+                listAllAlbums().values.toList()
             }
         }
     }
 
-    private fun listImageAlbums(): List<Map<String, Any>> {
+    private fun listImageAlbums(): Map<String, Map<String, Any>> {
         this.context.run {
             var total = 0
-            val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
+            val albumHashMap = hashMapOf<String, HashMap<String, Any>>()
 
             val imageProjection = arrayOf(
                 MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
@@ -214,7 +210,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     val album = albumHashMap[bucketId]
                     if (album == null) {
                         val folderName = cursor.getString(bucketColumn)
-                        albumHashMap[bucketId] = mutableMapOf(
+                        albumHashMap[bucketId] = hashMapOf(
                             "id" to bucketId,
                             "mediumType" to imageType,
                             "name" to folderName,
@@ -228,25 +224,25 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
-            val albumList = mutableListOf<Map<String, Any>>()
-            albumList.add(
-                mapOf(
+            val albumLinkedMap = linkedMapOf<String, Map<String, Any>>()
+            albumLinkedMap.put(
+                allAlbumId,
+                hashMapOf(
                     "id" to allAlbumId,
                     "mediumType" to imageType,
                     "name" to allAlbumName,
                     "count" to total
                 )
             )
-            albumList.addAll(albumHashMap.values)
-            return albumList
+            albumLinkedMap.putAll(albumHashMap)
+            return albumLinkedMap
         }
-        return listOf()
     }
 
-    private fun listVideoAlbums(): List<Map<String, Any>> {
+    private fun listVideoAlbums(): Map<String, Map<String, Any>> {
         this.context.run {
             var total = 0
-            val albumHashMap = mutableMapOf<String, MutableMap<String, Any>>()
+            val albumHashMap = hashMapOf<String, HashMap<String, Any>>()
 
             val videoProjection = arrayOf(
                 MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
@@ -270,7 +266,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     val album = albumHashMap[bucketId]
                     if (album == null) {
                         val folderName = cursor.getString(bucketColumn)
-                        albumHashMap[bucketId] = mutableMapOf(
+                        albumHashMap[bucketId] = hashMapOf(
                             "id" to bucketId,
                             "mediumType" to videoType,
                             "name" to folderName,
@@ -284,16 +280,58 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 }
             }
 
-            val albumList = mutableListOf<Map<String, Any>>()
-            albumList.add(mapOf(
-                "id" to allAlbumId,
-                "mediumType" to videoType,
-                "name" to allAlbumName,
-                "count" to total))
-            albumList.addAll(albumHashMap.values)
-            return albumList
+            val albumLinkedMap = linkedMapOf<String, Map<String, Any>>()
+            albumLinkedMap.put(
+                allAlbumId,
+                hashMapOf(
+                    "id" to allAlbumId,
+                    "mediumType" to videoType,
+                    "name" to allAlbumName,
+                    "count" to total
+                )
+            )
+            albumLinkedMap.putAll(albumHashMap)
+            return albumLinkedMap
         }
-        return listOf()
+    }
+
+    private fun listAllAlbums(): Map<String, Map<String, Any?>> {
+        val imageMap = this.listImageAlbums()
+        val videoMap = this.listVideoAlbums()
+        val albumMap = (imageMap.keys + videoMap.keys).associateWith {
+            mapOf(
+                "id" to it,
+                "mediumType" to null,
+                "name" to imageMap[it]?.get("name"),
+                "count" to (imageMap[it]?.get("count") ?: 0) as Int + (videoMap[it]?.get("count") ?: 0) as Int,
+            )
+        }
+        return albumMap
+    }
+
+    private fun listMedia(mediumType: String?, albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any?> {
+        return when (mediumType) {
+            imageType -> {
+                listImages(albumId, newest, total, skip, take)
+            }
+            videoType -> {
+                listVideos(albumId, newest, total, skip, take)
+            }
+            else -> {
+                val images = listImages(albumId, newest, total, skip, take).get("items") as List<Map<String, Any?>>
+                val videos = listVideos(albumId, newest, total, skip, take).get("items") as List<Map<String, Any?>>
+                var items = (images +videos).sortedWith(compareBy<Map<String, Any?>> {it.get("creationDate") as Long}.thenBy { it.get("modifiedDate") as Long })
+                if (newest) {
+                    items = items.reversed()
+                }
+                mapOf(
+                    "newest" to newest,
+                    "start" to (skip ?: 0),
+                    "total" to total,
+                    "items" to items
+                )
+            }
+        }
     }
 
     private fun listImages(albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any> {

@@ -22,7 +22,7 @@ class PhotoGallery {
 
   /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
-    required MediumType mediumType,
+    MediumType? mediumType,
     bool? hideIfEmpty = true,
   }) async {
     final json = await _channel.invokeMethod('listAlbums', {

@@ -14,14 +14,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     if(call.method == "listAlbums") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
-      let mediumType = arguments["mediumType"] as! String
+      let mediumType = arguments["mediumType"] as? String
       let hideIfEmpty = arguments["hideIfEmpty"] as? Bool
       result(listAlbums(mediumType: mediumType, hideIfEmpty: hideIfEmpty))
     }
     else if(call.method == "listMedia") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let albumId = arguments["albumId"] as! String
-      let mediumType = arguments["mediumType"] as! String
+      let mediumType = arguments["mediumType"] as? String
       let newest = arguments["newest"] as! Bool
       let skip = arguments["skip"] as? NSNumber
       let take = arguments["take"] as? NSNumber
@@ -90,11 +90,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   
   private var assetCollections : [PHAssetCollection]  = []
   
-  private func listAlbums(mediumType: String, hideIfEmpty: Bool? = true) -> [NSDictionary] {
+  private func listAlbums(mediumType: String?, hideIfEmpty: Bool? = true) -> [[String: Any?]] {
     self.assetCollections = []
     let fetchOptions = PHFetchOptions()
-    var total = 0
-    var albums = [NSDictionary]()
+    if #available(iOS 9, *) {
+      fetchOptions.fetchLimit = 1
+    }
+    var albums = [[String: Any?]]()
     var albumIds = Set<String>()
     
     func addCollection (collection: PHAssetCollection, hideIfEmpty: Bool) -> Void {
@@ -106,14 +108,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       guard !albumIds.contains(albumId) else { return }
       albumIds.insert(albumId)
       
-      let options = PHFetchOptions()
-      options.predicate = self.predicateFromMediumType(mediumType: mediumType)
-      if #available(iOS 9, *) {
-        fetchOptions.fetchLimit = 1
-      }
-      let count = PHAsset.fetchAssets(in: collection, options: options).count
+      let count = countMedia(collection: collection, mediumType: mediumType)
       if(count > 0 || !hideIfEmpty) {
-        total+=count
         self.assetCollections.append(collection)
         albums.append([
           "id": collection.localIdentifier,
@@ -156,15 +152,15 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "id": "__ALL__",
       "mediumType": mediumType,
       "name": "All",
-      "count" : countMedia(collection: nil, mediumTypes: [mediumType]),
+      "count" : countMedia(collection: nil, mediumType: mediumType),
     ], at: 0)
     
     return albums
   }
   
-  private func countMedia(collection: PHAssetCollection?, mediumTypes: [String]) -> Int {
+  private func countMedia(collection: PHAssetCollection?, mediumType: String?) -> Int {
     let options = PHFetchOptions()
-    options.predicate = self.predicateFromMediumTypes(mediumTypes: mediumTypes)
+    options.predicate = self.predicateFromMediumType(mediumType: mediumType)
     if(collection == nil) {
       return PHAsset.fetchAssets(with: options).count
     }
@@ -172,13 +168,13 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
-  private func listMedia(albumId: String, mediumType: String, newest: Bool, skip: NSNumber?, take: NSNumber?) -> NSDictionary {
+  private func listMedia(albumId: String, mediumType: String?, newest: Bool, skip: NSNumber?, take: NSNumber?) -> NSDictionary {
     let fetchOptions = PHFetchOptions()
+    fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
     fetchOptions.sortDescriptors = [
       NSSortDescriptor(key: "creationDate", ascending: newest ? false : true),
       NSSortDescriptor(key: "modificationDate", ascending: newest ? false : true)
     ]
-    fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
     
     let collection = self.assetCollections.first(where: { (collection) -> Bool in
       collection.localIdentifier == albumId
@@ -277,9 +273,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   ) {
     let manager = PHImageManager.default()
     let fetchOptions = PHFetchOptions()
-    if (mediumType != nil) {
-      fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType!)
-    }
+    fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType)
     fetchOptions.sortDescriptors = [
       NSSortDescriptor(key: "creationDate", ascending: false),
       NSSortDescriptor(key: "modificationDate", ascending: false)
@@ -509,16 +503,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
   }
   
-  private func predicateFromMediumTypes(mediumTypes: [String]) -> NSPredicate {
-    let predicates = mediumTypes.map { (dartValue) -> NSPredicate in
-      return predicateFromMediumType(mediumType: dartValue)
+  private func predicateFromMediumType(mediumType: String?) -> NSPredicate? {
+    guard let type = mediumType else {
+      return nil
     }
-    return NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.or, subpredicates: predicates)
-  }
-  
-  private func predicateFromMediumType(mediumType: String) -> NSPredicate {
-    let swiftType = toSwiftMediumType(value: mediumType)
-    return NSPredicate(format: "mediaType = %d", swiftType!.rawValue)
+    guard let swiftType = toSwiftMediumType(value: type) else {
+      return nil
+    }
+    return NSPredicate(format: "mediaType = %d", swiftType.rawValue)
   }
 
   private func extractFileExtensionFromUTI(uti: String?) -> String {
