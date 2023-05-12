@@ -37,7 +37,6 @@ class Album {
     return PhotoGallery._listMedia(
       album: this,
       newest: newest,
-      total: this.count,
       skip: skip,
       take: take,
     );

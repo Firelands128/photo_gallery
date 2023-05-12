@@ -39,7 +39,6 @@ void main() {
       album: allAlbum,
       mediumType: mediumType,
       newest: newest,
-      total: allAlbum.count,
       skip: skip,
       take: take,
     );

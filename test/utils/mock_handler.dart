@@ -13,14 +13,12 @@ Future<dynamic> mockMethodCallHandler(MethodCall call) async {
     String albumId = call.arguments['albumId'];
     MediumType? mediumType = jsonToMediumType(call.arguments['mediumType']);
     bool newest = call.arguments['newest'];
-    int? total = call.arguments['total'];
     int? skip = call.arguments['skip'];
     int? take = call.arguments['take'];
     dynamic mediaPage = Generator.generateMediaPageJson(
       albumId: albumId,
       mediumType: mediumType,
       newest: newest,
-      total: total ?? 10,
       skip: skip,
       take: take,
     );

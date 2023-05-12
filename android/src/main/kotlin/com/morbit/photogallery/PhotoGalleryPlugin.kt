@@ -106,12 +106,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
                 val newest = call.argument<Boolean>("newest")
-                val total = call.argument<Int>("total")
                 val skip = call.argument<Int>("skip")
                 val take = call.argument<Int>("take")
                 executor.submit {
                     result.success(
-                        listMedia(mediumType, albumId!!, newest!!, total!!, skip, take)
+                        listMedia(mediumType, albumId!!, newest!!, skip, take)
                     )
                 }
             }
@@ -309,35 +308,38 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return albumMap
     }
 
-    private fun listMedia(mediumType: String?, albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any?> {
+    private fun listMedia(mediumType: String?, albumId: String, newest: Boolean, skip: Int?, take: Int?): Map<String, Any?> {
         return when (mediumType) {
             imageType -> {
-                listImages(albumId, newest, total, skip, take)
+                listImages(albumId, newest, skip, take)
             }
             videoType -> {
-                listVideos(albumId, newest, total, skip, take)
+                listVideos(albumId, newest, skip, take)
             }
             else -> {
-                val images = listImages(albumId, newest, total, skip, take).get("items") as List<Map<String, Any?>>
-                val videos = listVideos(albumId, newest, total, skip, take).get("items") as List<Map<String, Any?>>
-                var items = (images +videos).sortedWith(compareBy<Map<String, Any?>> {it.get("creationDate") as Long}.thenBy { it.get("modifiedDate") as Long })
+                val images = listImages(albumId, newest, null, null)["items"] as List<Map<String, Any?>>
+                val videos = listVideos(albumId, newest, null, null)["items"] as List<Map<String, Any?>>
+                var items = (images + videos).sortedWith(compareBy<Map<String, Any?>> { it["creationDate"] as Long }.thenBy { it["modifiedDate"] as Long })
                 if (newest) {
                     items = items.reversed()
+                }
+                if (skip != null || take != null) {
+                    val start = skip ?: 0
+                    val total = items.size
+                    val end = if (take == null) total else Integer.min(start + take, total)
+                    items = items.subList(start, end)
                 }
                 mapOf(
                     "newest" to newest,
                     "start" to (skip ?: 0),
-                    "total" to total,
                     "items" to items
                 )
             }
         }
     }
 
-    private fun listImages(albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any> {
+    private fun listImages(albumId: String, newest: Boolean, skip: Int?, take: Int?): Map<String, Any?> {
         val media = mutableListOf<Map<String, Any?>>()
-        val offset = skip ?: 0
-        val limit = take ?: (total - offset)
 
         this.context.run {
             val isSelection = albumId != allAlbumId
@@ -362,18 +364,21 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         // Sort
                         putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
                         // Limit & Offset
-                        putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
-                        putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
+                        if (take != null) putInt(ContentResolver.QUERY_ARG_LIMIT, take)
+                        if (skip != null) putInt(ContentResolver.QUERY_ARG_OFFSET, skip)
                     },
                     null
                 )
             } else {
+                val offset = if (skip != null) "OFFSET $skip" else ""
+                val limit = if (take != null) "LIMIT $take" else ""
+
                 imageCursor = this.contentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     imageMetadataProjection,
                     selection,
                     selectionArgs,
-                    "$orderBy LIMIT $limit OFFSET $offset"
+                    "$orderBy $offset $limit"
                 )
             }
 
@@ -386,16 +391,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         return mapOf(
             "newest" to newest,
-            "start" to offset,
-            "total" to total,
+            "start" to skip,
             "items" to media
         )
     }
 
-    private fun listVideos(albumId: String, newest: Boolean, total: Int, skip: Int?, take: Int?): Map<String, Any> {
+    private fun listVideos(albumId: String, newest: Boolean, skip: Int?, take: Int?): Map<String, Any?> {
         val media = mutableListOf<Map<String, Any?>>()
-        val offset = skip ?: 0
-        val limit = take ?: (total - offset)
 
         this.context.run {
             val isSelection = albumId != allAlbumId
@@ -420,18 +422,21 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         // Sort
                         putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
                         // Limit & Offset
-                        putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
-                        putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
+                        if (take != null) putInt(ContentResolver.QUERY_ARG_LIMIT, take)
+                        if (skip != null) putInt(ContentResolver.QUERY_ARG_OFFSET, skip)
                     },
                     null
                 )
             } else {
+                val offset = if (skip != null) "OFFSET $skip" else ""
+                val limit = if (take != null) "LIMIT $take" else ""
+
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                     videoMetadataProjection,
                     selection,
                     selectionArgs,
-                    "$orderBy LIMIT $limit OFFSET $offset"
+                    "$orderBy $offset $limit"
                 )
             }
 
@@ -444,8 +449,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         return mapOf(
             "newest" to newest,
-            "start" to offset,
-            "total" to total,
+            "start" to skip,
             "items" to media
         )
     }

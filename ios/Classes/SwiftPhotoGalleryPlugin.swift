@@ -195,7 +195,6 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return [
       "newest": newest,
       "start": start,
-      "total": total,
       "items": items,
     ]
   }

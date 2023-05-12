@@ -31,25 +31,21 @@ class Generator {
     required String albumId,
     MediumType? mediumType,
     bool newest = true,
-    int total = 10,
     int? skip,
     int? take,
   }) {
     skip = skip ?? 0;
-    take = take ?? (total - skip);
-
+    take = take ?? 10;
     var items = [];
     int index = skip;
     while (index < skip + take) {
-      items.add(generateMediaJson(
-          mediumId: index.toString(), mediumType: mediumType));
+      items.add(generateMediaJson(mediumId: index.toString(), mediumType: mediumType));
       index++;
     }
 
     return {
       "newest": newest,
       "start": skip,
-      "total": total,
       "items": items,
     };
   }
@@ -74,7 +70,6 @@ class Generator {
     required Album album,
     MediumType? mediumType,
     bool newest = true,
-    required int total,
     int? skip,
     int? take,
   }) {
@@ -82,9 +77,8 @@ class Generator {
       albumId: album.id,
       mediumType: mediumType,
       newest: newest,
-      total: total,
       skip: skip,
-      take: take,
+      take: take ?? album.count,
     );
     return MediaPage.fromJson(album, json);
   }

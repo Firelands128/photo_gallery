@@ -36,7 +36,6 @@ class PhotoGallery {
   static Future<MediaPage> _listMedia({
     required Album album,
     bool newest = true,
-    required int total,
     int? skip,
     int? take,
   }) async {
@@ -44,7 +43,6 @@ class PhotoGallery {
       'albumId': album.id,
       'mediumType': mediumTypeToJson(album.mediumType),
       'newest': newest,
-      'total': total,
       'skip': skip,
       'take': take,
     });
