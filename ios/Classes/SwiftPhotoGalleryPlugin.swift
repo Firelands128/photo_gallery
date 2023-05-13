@@ -34,7 +34,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         mediumId: mediumId,
         completion: { (data: [String: Any?]?, error: Error?) -> Void in
           result(data)
-      })
+        }
+      )
     }
     else if(call.method == "getThumbnail") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -49,7 +50,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         highQuality: highQuality,
         completion: { (data: Data?, error: Error?) -> Void in
           result(data)
-      })
+        }
+      )
     }
     else if(call.method == "getAlbumThumbnail") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -68,7 +70,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         highQuality: highQuality,
         completion: { (data: Data?, error: Error?) -> Void in
           result(data)
-      })
+        }
+      )
     }
     else if(call.method == "getFile") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -79,7 +82,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         mimeType: mimeType,
         completion: { (filepath: String?, error: Error?) -> Void in
           result(filepath?.replacingOccurrences(of: "file://", with: ""))
-      })
+        }
+      )
     }
     else if(call.method == "cleanCache") {
       cleanCache()
@@ -254,7 +258,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           }
           let bytes = image.jpegData(compressionQuality: CGFloat(70))
           completion(bytes, nil)
-      })
+        }
+      )
       return
     }
     
@@ -312,7 +317,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           }
           let bytes = image.jpegData(compressionQuality: CGFloat(80))
           completion(bytes, nil)
-      })
+        }
+      )
       return
     }
     
@@ -366,25 +372,28 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           }
         )
       } else if(asset.mediaType == PHAssetMediaType.video
-        || asset.mediaType == PHAssetMediaType.audio) {
+                || asset.mediaType == PHAssetMediaType.audio) {
         let options = PHVideoRequestOptions()
         options.version = .current
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
         
-        manager.requestAVAsset(forVideo: asset, options: options, resultHandler: { (avAsset, avAudioMix, info) in
-          DispatchQueue.main.async(execute: {
-            do {
-              let avAsset = avAsset as? AVURLAsset
-              let data = try Data(contentsOf: avAsset!.url)
-              let fileExt = self.extractFileExtensionFromAsset(asset: asset)
-              let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
-              try! data.write(to: filepath, options: .atomic)
-              completion(filepath.absoluteString, nil)
-            } catch {
-              completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
-            }
-          })
+        manager.requestAVAsset(
+          forVideo: asset,
+          options: options,
+          resultHandler: { (avAsset, avAudioMix, info) in
+            DispatchQueue.main.async(execute: {
+              do {
+                let avAsset = avAsset as? AVURLAsset
+                let data = try Data(contentsOf: avAsset!.url)
+                let fileExt = self.extractFileExtensionFromAsset(asset: asset)
+                let filepath = self.exportPathForAsset(asset: asset, ext: fileExt)
+                try! data.write(to: filepath, options: .atomic)
+                completion(filepath.absoluteString, nil)
+              } catch {
+                completion(nil, NSError(domain: "photo_gallery", code: 500, userInfo: nil))
+              }
+            })
           }
         )
       }
@@ -406,11 +415,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       return nil
     }
   }
-
+  
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
-		let size = self.extractSizeFromAsset(asset: asset)
+    let size = self.extractSizeFromAsset(asset: asset)
     return [
       "id": asset.localIdentifier,
       "filename": filename,
@@ -419,7 +428,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "mimeType": mimeType,
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
-			"size": size,
+      "size": size,
       "duration": NSInteger(asset.duration * 1000),
       "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
@@ -429,7 +438,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
-		let size = self.extractSizeFromAsset(asset: asset)
+    let size = self.extractSizeFromAsset(asset: asset)
     let manager = PHImageManager.default()
     manager.requestImageData(
       for: asset,
@@ -443,7 +452,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
           "mimeType": mimeType,
           "height": asset.pixelHeight,
           "width": asset.pixelWidth,
-	      	"size": size,
+          "size": size,
           "orientation": self.toOrientationValue(orientation: orientation),
           "duration": NSInteger(asset.duration * 1000),
           "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
@@ -452,7 +461,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       }
     )
   }
-
+  
   private func exportPathForAsset(asset: PHAsset, ext: String) -> URL {
     let mediumId = asset.localIdentifier
       .replacingOccurrences(of: "/", with: "__")
@@ -511,7 +520,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return NSPredicate(format: "mediaType = %d", swiftType.rawValue)
   }
-
+  
   private func extractFileExtensionFromUTI(uti: String?) -> String {
     guard let assetUTI = uti else {
       return ""
@@ -561,14 +570,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return asset.value(forKey: "filename") as? String
   }
-
+  
   private func extractSizeFromAsset(asset: PHAsset) -> Int64? {
-		let resources = PHAssetResource.assetResources(for: asset)
-		guard let resource = resources.first,
-					let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong else {
-			return nil
-		}
-		return Int64(bitPattern: UInt64(unsignedInt64))
+    let resources = PHAssetResource.assetResources(for: asset)
+    guard let resource = resources.first,
+          let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong else {
+      return nil
+    }
+    return Int64(bitPattern: UInt64(unsignedInt64))
   }
   
   private func extractTitleFromFilename(filename: String?) -> String? {

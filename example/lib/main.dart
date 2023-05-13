@@ -83,8 +83,8 @@ class _MyAppState extends State<MyApp> {
                         ...?_albums?.map(
                           (album) => GestureDetector(
                             onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (context) => AlbumPage(album))),
+                              MaterialPageRoute(builder: (context) => AlbumPage(album)),
+                            ),
                             child: Column(
                               children: <Widget>[
                                 ClipRRect(
@@ -95,8 +95,7 @@ class _MyAppState extends State<MyApp> {
                                     width: gridWidth,
                                     child: FadeInImage(
                                       fit: BoxFit.cover,
-                                      placeholder:
-                                          MemoryImage(kTransparentImage),
+                                      placeholder: MemoryImage(kTransparentImage),
                                       image: AlbumThumbnailProvider(
                                         album: album,
                                         highQuality: true,
@@ -186,8 +185,9 @@ class AlbumPageState extends State<AlbumPage> {
           children: <Widget>[
             ...?_media?.map(
               (medium) => GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ViewerPage(medium))),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ViewerPage(medium)),
+                ),
                 child: Container(
                   color: Colors.grey[300],
                   child: FadeInImage(
@@ -293,9 +293,7 @@ class _VideoProviderState extends State<VideoProvider> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    _controller!.value.isPlaying
-                        ? _controller!.pause()
-                        : _controller!.play();
+                    _controller!.value.isPlaying ? _controller!.pause() : _controller!.play();
                   });
                 },
                 child: Icon(

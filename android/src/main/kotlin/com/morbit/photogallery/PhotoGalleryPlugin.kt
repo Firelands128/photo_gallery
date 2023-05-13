@@ -10,7 +10,6 @@ import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
-import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -81,18 +80,18 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
 
-    override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "photo_gallery")
         val plugin = PhotoGalleryPlugin()
         plugin.context = flutterPluginBinding.applicationContext
         channel.setMethodCallHandler(plugin)
     }
 
-    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
     }
 
-    override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
+    override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "listAlbums" -> {
                 val mediumType = call.argument<String>("mediumType")
@@ -102,6 +101,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             "listMedia" -> {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
@@ -114,6 +114,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             "getMedium" -> {
                 val mediumId = call.argument<String>("mediumId")
                 val mediumType = call.argument<String>("mediumType")
@@ -123,6 +124,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             "getThumbnail" -> {
                 val mediumId = call.argument<String>("mediumId")
                 val mediumType = call.argument<String>("mediumType")
@@ -135,6 +137,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             "getAlbumThumbnail" -> {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
@@ -148,6 +151,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             "getFile" -> {
                 val mediumId = call.argument<String>("mediumId")
                 val mediumType = call.argument<String>("mediumType")
@@ -158,6 +162,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             "cleanCache" -> {
                 executor.submit {
                     result.success(
@@ -165,6 +170,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 }
             }
+
             else -> result.notImplemented()
         }
     }
@@ -174,9 +180,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             imageType -> {
                 listImageAlbums().values.toList()
             }
+
             videoType -> {
                 listVideoAlbums().values.toList()
             }
+
             else -> {
                 listAllAlbums().values.toList()
             }
@@ -224,13 +232,10 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             }
 
             val albumLinkedMap = linkedMapOf<String, Map<String, Any>>()
-            albumLinkedMap.put(
-                allAlbumId,
-                hashMapOf(
-                    "id" to allAlbumId,
-                    "name" to allAlbumName,
-                    "count" to total
-                )
+            albumLinkedMap[allAlbumId] = hashMapOf(
+                "id" to allAlbumId,
+                "name" to allAlbumName,
+                "count" to total
             )
             albumLinkedMap.putAll(albumHashMap)
             return albumLinkedMap
@@ -278,13 +283,10 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             }
 
             val albumLinkedMap = linkedMapOf<String, Map<String, Any>>()
-            albumLinkedMap.put(
-                allAlbumId,
-                hashMapOf(
-                    "id" to allAlbumId,
-                    "name" to allAlbumName,
-                    "count" to total
-                )
+            albumLinkedMap[allAlbumId] = hashMapOf(
+                "id" to allAlbumId,
+                "name" to allAlbumName,
+                "count" to total
             )
             albumLinkedMap.putAll(albumHashMap)
             return albumLinkedMap
@@ -304,18 +306,28 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return albumMap
     }
 
-    private fun listMedia(mediumType: String?, albumId: String, newest: Boolean, skip: Int?, take: Int?): Map<String, Any?> {
+    private fun listMedia(
+        mediumType: String?,
+        albumId: String,
+        newest: Boolean,
+        skip: Int?,
+        take: Int?
+    ): Map<String, Any?> {
         return when (mediumType) {
             imageType -> {
                 listImages(albumId, newest, skip, take)
             }
+
             videoType -> {
                 listVideos(albumId, newest, skip, take)
             }
+
             else -> {
                 val images = listImages(albumId, newest, null, null)["items"] as List<Map<String, Any?>>
                 val videos = listVideos(albumId, newest, null, null)["items"] as List<Map<String, Any?>>
-                var items = (images + videos).sortedWith(compareBy<Map<String, Any?>> { it["creationDate"] as Long }.thenBy { it["modifiedDate"] as Long })
+                val comparator = compareBy<Map<String, Any?>> { it["creationDate"] as Long }
+                    .thenBy { it["modifiedDate"] as Long }
+                var items = (images + videos).sortedWith(comparator)
                 if (newest) {
                     items = items.reversed()
                 }
@@ -452,9 +464,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             imageType -> {
                 getImageMedia(mediumId)
             }
+
             videoType -> {
                 getVideoMedia(mediumId)
             }
+
             else -> {
                 getImageMedia(mediumId) ?: getVideoMedia(mediumId)
             }
@@ -505,14 +519,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return videoMetadata
     }
 
-    private fun getThumbnail(mediumId: String, mediumType: String?, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getThumbnail(
+        mediumId: String,
+        mediumType: String?,
+        width: Int?,
+        height: Int?,
+        highQuality: Boolean?
+    ): ByteArray? {
         return when (mediumType) {
             imageType -> {
                 getImageThumbnail(mediumId, width, height, highQuality)
             }
+
             videoType -> {
                 getVideoThumbnail(mediumId, width, height, highQuality)
             }
+
             else -> {
                 getImageThumbnail(mediumId, width, height, highQuality)
                     ?: getVideoThumbnail(mediumId, width, height, highQuality)
@@ -537,7 +559,9 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     null
                 }
             } else {
-                val kind = if (highQuality == true) MediaStore.Images.Thumbnails.MINI_KIND else MediaStore.Images.Thumbnails.MICRO_KIND
+                val kind =
+                    if (highQuality == true) MediaStore.Images.Thumbnails.MINI_KIND
+                    else MediaStore.Images.Thumbnails.MICRO_KIND
                 MediaStore.Images.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
                     kind, null
@@ -572,7 +596,8 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 }
             } else {
                 val kind =
-                    if (highQuality == true) MediaStore.Video.Thumbnails.MINI_KIND else MediaStore.Video.Thumbnails.MICRO_KIND
+                    if (highQuality == true) MediaStore.Video.Thumbnails.MINI_KIND
+                    else MediaStore.Video.Thumbnails.MICRO_KIND
                 MediaStore.Video.Thumbnails.getThumbnail(
                     this.contentResolver, mediumId.toLong(),
                     kind, null
@@ -589,21 +614,36 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return byteArray
     }
 
-    private fun getAlbumThumbnail(albumId: String, mediumType: String?, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getAlbumThumbnail(
+        albumId: String,
+        mediumType: String?,
+        newest: Boolean,
+        width: Int?,
+        height: Int?,
+        highQuality: Boolean?
+    ): ByteArray? {
         return when (mediumType) {
             imageType -> {
                 getImageAlbumThumbnail(albumId, newest, width, height, highQuality)
             }
+
             videoType -> {
                 getVideoAlbumThumbnail(albumId, newest, width, height, highQuality)
             }
+
             else -> {
                 getAllAlbumThumbnail(albumId, newest, width, height, highQuality)
             }
         }
     }
 
-    private fun getImageAlbumThumbnail(albumId: String, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getImageAlbumThumbnail(
+        albumId: String,
+        newest: Boolean,
+        width: Int?,
+        height: Int?,
+        highQuality: Boolean?
+    ): ByteArray? {
         return this.context.run {
             val projection = arrayOf(MediaStore.Images.Media._ID)
 
@@ -621,7 +661,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoAlbumThumbnail(albumId: String, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getVideoAlbumThumbnail(
+        albumId: String,
+        newest: Boolean,
+        width: Int?,
+        height: Int?,
+        highQuality: Boolean?
+    ): ByteArray? {
         return this.context.run {
             val projection = arrayOf(MediaStore.Video.Media._ID)
 
@@ -639,7 +685,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getAllAlbumThumbnail(albumId: String, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getAllAlbumThumbnail(
+        albumId: String,
+        newest: Boolean,
+        width: Int?,
+        height: Int?,
+        highQuality: Boolean?
+    ): ByteArray? {
         return this.context.run {
             val imageProjection = arrayOf(
                 MediaStore.Images.Media._ID,
@@ -688,20 +740,16 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             }
 
             if (imageId != null && videoId != null) {
-                if (imageDateAdded != null && videoDateAdded != null) {
-                    if (newest && imageDateAdded!! < videoDateAdded!! || !newest && imageDateAdded!! > videoDateAdded!!) {
-                        return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
-                    } else {
-                        return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
-                    }
+                if (newest && imageDateAdded!! > videoDateAdded!! || !newest && imageDateAdded!! < videoDateAdded!!) {
+                    return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
                 }
-                if (imageDateModified != null && videoDateModified != null) {
-                    if (newest && imageDateModified!! < videoDateModified!! || !newest && imageDateModified!! > videoDateModified!!) {
-                        return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
-                    } else {
-                        return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
-                    }
+                if (newest && imageDateAdded!! < videoDateAdded!! || !newest && imageDateAdded!! > videoDateAdded!!) {
+                    return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
                 }
+                if (newest && imageDateModified!! >= videoDateModified!! || !newest && imageDateModified!! <= videoDateModified!!) {
+                    return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
+                }
+                return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
             }
 
             if (imageId != null) {
@@ -805,9 +853,11 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             imageType -> {
                 getImageFile(mediumId, mimeType = mimeType)
             }
+
             videoType -> {
                 getVideoFile(mediumId)
             }
+
             else -> {
                 getImageFile(mediumId, mimeType = mimeType) ?: getVideoFile(mediumId)
             }
@@ -874,10 +924,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val bitmap: Bitmap? = this.context.run {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 try {
-                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(
-                        this.contentResolver,
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong())
-                    ))
+                    ImageDecoder.decodeBitmap(
+                        ImageDecoder.createSource(
+                            this.contentResolver,
+                            ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, mediumId.toLong())
+                        )
+                    )
                 } catch (e: Exception) {
                     null
                 }
@@ -891,24 +943,39 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
         bitmap?.let {
             val compressFormat: Bitmap.CompressFormat
-            if (mimeType == "image/jpeg") {
-                val path = File(getCachePath(), "$mediumId.jpeg")
-                val out = FileOutputStream(path)
-                compressFormat = Bitmap.CompressFormat.JPEG
-                it.compress(compressFormat, 100, out)
-                return path.absolutePath
-            } else if (mimeType == "image/png") {
-                val path = File(getCachePath(), "$mediumId.png")
-                val out = FileOutputStream(path)
-                compressFormat = Bitmap.CompressFormat.PNG
-                it.compress(compressFormat, 100, out)
-                return path.absolutePath
-            } else if (mimeType == "image/webp") {
-                val path = File(getCachePath(), "$mediumId.webp")
-                val out = FileOutputStream(path)
-                compressFormat = Bitmap.CompressFormat.WEBP_LOSSLESS
-                it.compress(compressFormat, 100, out)
-                return path.absolutePath
+            when (mimeType) {
+                "image/jpeg" -> {
+                    val path = File(getCachePath(), "$mediumId.jpeg")
+                    val out = FileOutputStream(path)
+                    compressFormat = Bitmap.CompressFormat.JPEG
+                    it.compress(compressFormat, 100, out)
+                    return path.absolutePath
+                }
+
+                "image/png" -> {
+                    val path = File(getCachePath(), "$mediumId.png")
+                    val out = FileOutputStream(path)
+                    compressFormat = Bitmap.CompressFormat.PNG
+                    it.compress(compressFormat, 100, out)
+                    return path.absolutePath
+                }
+
+                "image/webp" -> {
+                    val path = File(getCachePath(), "$mediumId.webp")
+                    val out = FileOutputStream(path)
+                    compressFormat = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        Bitmap.CompressFormat.WEBP_LOSSLESS
+                    }
+                    else {
+                        Bitmap.CompressFormat.WEBP
+                    }
+                    it.compress(compressFormat, 100, out)
+                    return path.absolutePath
+                }
+
+                else -> {
+                    return null
+                }
             }
         }
 
@@ -1013,7 +1080,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getCachePath(): File? {
+    private fun getCachePath(): File {
         return this.context.run {
             val cachePath = File(this.cacheDir, "photo_gallery")
             if (!cachePath.exists()) {
@@ -1025,6 +1092,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun cleanCache() {
         val cachePath = getCachePath()
-        cachePath?.deleteRecursively()
+        cachePath.deleteRecursively()
     }
 }
