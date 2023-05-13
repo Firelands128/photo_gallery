@@ -23,22 +23,11 @@ Add the following permissions to your *AndroidManifest.xml*, located in ```<proj
 
 ```xml
 <manifest ...>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    ...
-<manifest/>
-```
-
-API 29+
-
-Add the following property to your *AndroidManifest.xml*, located in ```<project root>/android/app/src/main/AndroidManifest.xml``` to [opt-out of scoped storage](https://developer.android.com/training/data-storage/use-cases#opt-out-scoped-storage):
-```xml
-<manifest ...>
-    ...
-    <application
-        android:requestLegacyExternalStorage="true"
-        ...>
-    <application/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 <manifest/>
 ```
 
@@ -46,22 +35,17 @@ Add the following property to your *AndroidManifest.xml*, located in ```<project
 
 * Listing albums in the gallery
 ```dart
-final List<Album> imageAlbums = await PhotoGallery.listAlbums(
-    mediumType: MediumType.image,
-);
+final List<Album> imageAlbums = await PhotoGallery.listAlbums();
 final List<Album> videoAlbums = await PhotoGallery.listAlbums(
     mediumType: MediumType.video,
-    hideIfEmpty: false
+    newest: false,
+    hideIfEmpty: false,
 );
 ```
 * Listing media in an album
 ```dart
-final MediaPage imagePage = await imageAlbum.listMedia(
-    skip: 5,
-    take: 10,
-);
-final MediaPage videoPage = await videoAlbum.listMedia(
-    newest: false,
+final MediaPage imagePage = await imageAlbum.listMedia();
+final MediaPage videoPage = await imageAlbum.listMedia(
     skip: 5,
     take: 10,
 );
@@ -133,6 +117,8 @@ final List<int> data = await album.getThumbnail(
 ```dart
 final List<int> data = await PhotoGallery.getAlbumThumbnail(
     albumId: albumId,
+    mediumType: MediumType.image,
+    newest: false,
     width: 128,
     height: 128,
     highQuality: true,
@@ -164,7 +150,7 @@ FadeInImage(
     fit: BoxFit.cover,
     placeholder: MemoryImage(kTransparentImage),
     image: AlbumThumbnailProvider(
-        albumId: albumId,
+        album: album,
         width: 128,
         height: 128,
         hightQuality: true,
