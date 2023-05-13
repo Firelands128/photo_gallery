@@ -92,8 +92,7 @@ class _MyAppState extends State<MyApp> {
                                       placeholder:
                                           MemoryImage(kTransparentImage),
                                       image: AlbumThumbnailProvider(
-                                        albumId: album.id,
-                                        mediumType: album.mediumType,
+                                        album: album,
                                         highQuality: true,
                                       ),
                                     ),

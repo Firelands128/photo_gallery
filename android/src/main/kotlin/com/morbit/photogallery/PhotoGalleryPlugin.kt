@@ -138,12 +138,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             "getAlbumThumbnail" -> {
                 val albumId = call.argument<String>("albumId")
                 val mediumType = call.argument<String>("mediumType")
+                val newest = call.argument<Boolean>("newest")
                 val width = call.argument<Int>("width")
                 val height = call.argument<Int>("height")
                 val highQuality = call.argument<Boolean>("highQuality")
                 executor.submit {
                     result.success(
-                        getAlbumThumbnail(albumId!!, mediumType, width, height, highQuality)
+                        getAlbumThumbnail(albumId!!, mediumType, newest!!, width, height, highQuality)
                     )
                 }
             }
@@ -211,7 +212,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         val folderName = cursor.getString(bucketColumn)
                         albumHashMap[bucketId] = hashMapOf(
                             "id" to bucketId,
-                            "mediumType" to imageType,
                             "name" to folderName,
                             "count" to 1
                         )
@@ -228,7 +228,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 allAlbumId,
                 hashMapOf(
                     "id" to allAlbumId,
-                    "mediumType" to imageType,
                     "name" to allAlbumName,
                     "count" to total
                 )
@@ -267,7 +266,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         val folderName = cursor.getString(bucketColumn)
                         albumHashMap[bucketId] = hashMapOf(
                             "id" to bucketId,
-                            "mediumType" to videoType,
                             "name" to folderName,
                             "count" to 1
                         )
@@ -284,7 +282,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 allAlbumId,
                 hashMapOf(
                     "id" to allAlbumId,
-                    "mediumType" to videoType,
                     "name" to allAlbumName,
                     "count" to total
                 )
@@ -300,7 +297,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val albumMap = (imageMap.keys + videoMap.keys).associateWith {
             mapOf(
                 "id" to it,
-                "mediumType" to null,
                 "name" to imageMap[it]?.get("name"),
                 "count" to (imageMap[it]?.get("count") ?: 0) as Int + (videoMap[it]?.get("count") ?: 0) as Int,
             )
@@ -330,7 +326,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     items = items.subList(start, end)
                 }
                 mapOf(
-                    "newest" to newest,
                     "start" to (skip ?: 0),
                     "items" to items
                 )
@@ -390,7 +385,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return mapOf(
-            "newest" to newest,
             "start" to skip,
             "items" to media
         )
@@ -448,7 +442,6 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return mapOf(
-            "newest" to newest,
             "start" to skip,
             "items" to media
         )
@@ -596,55 +589,25 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return byteArray
     }
 
-    private fun getAlbumThumbnail(albumId: String, mediumType: String?, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getAlbumThumbnail(albumId: String, mediumType: String?, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return when (mediumType) {
             imageType -> {
-                getImageAlbumThumbnail(albumId, width, height, highQuality)
+                getImageAlbumThumbnail(albumId, newest, width, height, highQuality)
             }
             videoType -> {
-                getVideoAlbumThumbnail(albumId, width, height, highQuality)
+                getVideoAlbumThumbnail(albumId, newest, width, height, highQuality)
             }
             else -> {
-                getImageAlbumThumbnail(albumId, width, height, highQuality)
-                    ?: getVideoAlbumThumbnail(albumId, width, height, highQuality)
+                getAllAlbumThumbnail(albumId, newest, width, height, highQuality)
             }
         }
     }
 
-    private fun getImageAlbumThumbnail(albumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getImageAlbumThumbnail(albumId: String, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return this.context.run {
-            val isSelection = albumId != allAlbumId
-            val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
-            val selectionArgs = if (isSelection) arrayOf(albumId) else null
-            val orderBy =
-                "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+            val projection = arrayOf(MediaStore.Images.Media._ID)
 
-            val imageCursor: Cursor?
-
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                imageCursor = this.contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Images.Media._ID),
-                    android.os.Bundle().apply {
-                        // Selection
-                        putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
-                        putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
-                        // Sort
-                        putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
-                        // Limit
-                        putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
-                    },
-                    null
-                )
-            } else {
-                imageCursor = this.contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Images.Media._ID),
-                    selection,
-                    selectionArgs,
-                    "$orderBy LIMIT 1"
-                )
-            }
+            val imageCursor = getImageCursor(albumId, newest, projection)
 
             imageCursor?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -658,20 +621,160 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoAlbumThumbnail(albumId: String, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+    private fun getVideoAlbumThumbnail(albumId: String, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
         return this.context.run {
+            val projection = arrayOf(MediaStore.Video.Media._ID)
+
+            val videoCursor = getVideoCursor(albumId, newest, projection)
+
+            videoCursor?.use { cursor ->
+                if (cursor.moveToNext()) {
+                    val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+                    val id = cursor.getLong(idColumn)
+                    return@run getVideoThumbnail(id.toString(), width, height, highQuality)
+                }
+            }
+
+            return null
+        }
+    }
+
+    private fun getAllAlbumThumbnail(albumId: String, newest: Boolean, width: Int?, height: Int?, highQuality: Boolean?): ByteArray? {
+        return this.context.run {
+            val imageProjection = arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DATE_ADDED,
+                MediaStore.Images.Media.DATE_MODIFIED,
+            )
+
+            val imageCursor = getImageCursor(albumId, newest, imageProjection)
+
+            var imageId: Long? = null
+            var imageDateAdded: Long? = null
+            var imageDateModified: Long? = null
+            imageCursor?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+                    val dateAddedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED)
+                    val dateModifiedColumn =
+                        cursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED)
+                    imageId = cursor.getLong(idColumn)
+                    imageDateAdded = cursor.getLong(dateAddedColumn) * 1000
+                    imageDateModified = cursor.getLong(dateModifiedColumn) * 1000
+                }
+            }
+
+            val videoProjection = arrayOf(
+                MediaStore.Video.Media._ID,
+                MediaStore.Video.Media.DATE_ADDED,
+                MediaStore.Video.Media.DATE_MODIFIED,
+            )
+
+            val videoCursor = getVideoCursor(albumId, newest, videoProjection)
+
+            var videoId: Long? = null
+            var videoDateAdded: Long? = null
+            var videoDateModified: Long? = null
+            videoCursor?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+                    val dateAddedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED)
+                    val dateModifiedColumn =
+                        cursor.getColumnIndex(MediaStore.Video.Media.DATE_MODIFIED)
+                    videoId = cursor.getLong(idColumn)
+                    videoDateAdded = cursor.getLong(dateAddedColumn) * 1000
+                    videoDateModified = cursor.getLong(dateModifiedColumn) * 1000
+                }
+            }
+
+            if (imageId != null && videoId != null) {
+                if (imageDateAdded != null && videoDateAdded != null) {
+                    if (newest && imageDateAdded!! < videoDateAdded!! || !newest && imageDateAdded!! > videoDateAdded!!) {
+                        return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
+                    } else {
+                        return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
+                    }
+                }
+                if (imageDateModified != null && videoDateModified != null) {
+                    if (newest && imageDateModified!! < videoDateModified!! || !newest && imageDateModified!! > videoDateModified!!) {
+                        return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
+                    } else {
+                        return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
+                    }
+                }
+            }
+
+            if (imageId != null) {
+                return@run getImageThumbnail(imageId.toString(), width, height, highQuality)
+            }
+
+            if (videoId != null) {
+                return@run getVideoThumbnail(videoId.toString(), width, height, highQuality)
+            }
+
+            return@run null
+        }
+    }
+
+    private fun getImageCursor(albumId: String, newest: Boolean, projection: Array<String>): Cursor? {
+        this.context.run {
+            val isSelection = albumId != allAlbumId
+            val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
+            val selectionArgs = if (isSelection) arrayOf(albumId) else null
+            val orderBy = if (newest) {
+                "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+            } else {
+                "${MediaStore.Images.Media.DATE_ADDED} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
+            }
+
+            val imageCursor: Cursor?
+
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                imageCursor = this.contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    android.os.Bundle().apply {
+                        // Selection
+                        putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+                        putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+                        // Sort
+                        putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
+                        // Limit
+                        putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
+                    },
+                    null
+                )
+            } else {
+                imageCursor = this.contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    "$orderBy LIMIT 1"
+                )
+            }
+
+            return imageCursor
+        }
+    }
+
+    private fun getVideoCursor(albumId: String, newest: Boolean, projection: Array<String>): Cursor? {
+        this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Video.Media.BUCKET_ID} = ?" else null
             val selectionArgs = if (isSelection) arrayOf(albumId) else null
-            val orderBy =
+            val orderBy = if (newest) {
                 "${MediaStore.Video.Media.DATE_ADDED} DESC, ${MediaStore.Video.Media.DATE_MODIFIED} DESC"
+            } else {
+                "${MediaStore.Video.Media.DATE_ADDED} ASC, ${MediaStore.Video.Media.DATE_MODIFIED} ASC"
+            }
 
             val videoCursor: Cursor?
 
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Video.Media._ID),
+                    projection,
                     android.os.Bundle().apply {
                         // Selection
                         putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
@@ -686,22 +789,14 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             } else {
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(MediaStore.Video.Media._ID),
+                    projection,
                     selection,
                     selectionArgs,
                     "$orderBy LIMIT 1"
                 )
             }
 
-            videoCursor?.use { cursor ->
-                if (cursor.moveToNext()) {
-                    val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
-                    val id = cursor.getLong(idColumn)
-                    return@run getVideoThumbnail(id.toString(), width, height, highQuality)
-                }
-            }
-
-            return null
+            return videoCursor
         }
     }
 

@@ -23,26 +23,27 @@ class PhotoGallery {
   /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
     MediumType? mediumType,
-    bool? hideIfEmpty = true,
+    bool newest = true,
+    bool hideIfEmpty = true,
   }) async {
     final json = await _channel.invokeMethod('listAlbums', {
       'mediumType': mediumTypeToJson(mediumType),
+      'newest': newest,
       'hideIfEmpty': hideIfEmpty,
     });
-    return json.map<Album>((x) => Album.fromJson(x)).toList();
+    return json.map<Album>((album) => Album.fromJson(album, mediumType, newest)).toList();
   }
 
   /// List all available media in a specific album, support pagination of media
   static Future<MediaPage> _listMedia({
     required Album album,
-    bool newest = true,
     int? skip,
     int? take,
   }) async {
     final json = await _channel.invokeMethod('listMedia', {
       'albumId': album.id,
       'mediumType': mediumTypeToJson(album.mediumType),
-      'newest': newest,
+      'newest': album.newest,
       'skip': skip,
       'take': take,
     });
@@ -84,6 +85,7 @@ class PhotoGallery {
   static Future<List<int>?> getAlbumThumbnail({
     required String albumId,
     MediumType? mediumType,
+    bool newest = true,
     int? width,
     int? height,
     bool? highQuality = false,
@@ -91,6 +93,7 @@ class PhotoGallery {
     final bytes = await _channel.invokeMethod('getAlbumThumbnail', {
       'albumId': albumId,
       'mediumType': mediumTypeToJson(mediumType),
+      'newest': newest,
       'width': width,
       'height': height,
       'highQuality': highQuality,

@@ -55,12 +55,14 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let albumId = arguments["albumId"] as! String
       let mediumType = arguments["mediumType"] as? String
+      let newest = arguments["newest"] as! Bool
       let width = arguments["width"] as? Int
       let height = arguments["height"] as? Int
       let highQuality = arguments["highQuality"] as? Bool
       getAlbumThumbnail(
         albumId: albumId,
         mediumType: mediumType,
+        newest: newest,
         width: width,
         height: height,
         highQuality: highQuality,
@@ -113,7 +115,6 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         self.assetCollections.append(collection)
         albums.append([
           "id": collection.localIdentifier,
-          "mediumType": mediumType,
           "name": collection.localizedTitle ?? "Unknown",
           "count": count,
         ])
@@ -150,7 +151,6 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     
     albums.insert([
       "id": "__ALL__",
-      "mediumType": mediumType,
       "name": "All",
       "count" : countMedia(collection: nil, mediumType: mediumType),
     ], at: 0)
@@ -193,7 +193,6 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     
     return [
-      "newest": newest,
       "start": start,
       "items": items,
     ]
@@ -265,6 +264,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   private func getAlbumThumbnail(
     albumId: String,
     mediumType: String?,
+    newest: Bool,
     width: Int?,
     height: Int?,
     highQuality: Bool?,
@@ -274,8 +274,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let fetchOptions = PHFetchOptions()
     fetchOptions.predicate = self.predicateFromMediumType(mediumType: mediumType)
     fetchOptions.sortDescriptors = [
-      NSSortDescriptor(key: "creationDate", ascending: false),
-      NSSortDescriptor(key: "modificationDate", ascending: false)
+      NSSortDescriptor(key: "creationDate", ascending: !newest),
+      NSSortDescriptor(key: "modificationDate", ascending: !newest)
     ]
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1

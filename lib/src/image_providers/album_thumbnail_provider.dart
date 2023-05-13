@@ -3,15 +3,13 @@ part of photogallery;
 /// Fetches the given album thumbnail from the gallery.
 class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   const AlbumThumbnailProvider({
-    required this.albumId,
-    this.mediumType,
+    required this.album,
     this.height,
     this.width,
     this.highQuality = false,
   });
 
-  final String albumId;
-  final MediumType? mediumType;
+  final Album album;
   final int? height;
   final int? width;
   final bool? highQuality;
@@ -22,7 +20,7 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
       codec: _loadAsync(key, decode),
       scale: 1.0,
       informationCollector: () sync* {
-        yield ErrorDescription('Id: $albumId');
+        yield ErrorDescription('Id: ${album.id}');
       },
     );
   }
@@ -30,8 +28,9 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   Future<ui.Codec> _loadAsync(AlbumThumbnailProvider key, DecoderBufferCallback decode) async {
     assert(key == this);
     final data = await PhotoGallery.getAlbumThumbnail(
-      albumId: albumId,
-      mediumType: mediumType,
+      albumId: album.id,
+      mediumType: album.mediumType,
+      newest: album.newest,
       height: height,
       width: width,
       highQuality: highQuality,
@@ -54,12 +53,12 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   bool operator ==(dynamic other) {
     if (other.runtimeType != runtimeType) return false;
     final AlbumThumbnailProvider typedOther = other;
-    return albumId == typedOther.albumId;
+    return album.id == typedOther.album.id;
   }
 
   @override
-  int get hashCode => albumId.hashCode;
+  int get hashCode => album.id.hashCode;
 
   @override
-  String toString() => '$runtimeType("$albumId")';
+  String toString() => '$runtimeType("${album.id}")';
 }

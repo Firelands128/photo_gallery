@@ -9,6 +9,9 @@ class Album {
   /// The [MediumType] of the album.
   final MediumType? mediumType;
 
+  /// The sort direction is newest or not
+  final bool newest;
+
   /// The name of the album.
   final String? name;
 
@@ -19,9 +22,10 @@ class Album {
   bool get isAllAlbum => id == "__ALL__";
 
   /// Creates a album from platform channel protocol.
-  Album.fromJson(dynamic json)
+  Album.fromJson(dynamic json, MediumType? mediumType, bool newest)
       : id = json['id'],
-        mediumType = jsonToMediumType(json['mediumType']),
+        mediumType = mediumType,
+        newest = newest,
         name = json['name'],
         count = json['count'];
 
@@ -30,13 +34,11 @@ class Album {
   /// Pagination can be controlled out of [skip] (defaults to `0`) and
   /// [take] (defaults to `<total>`).
   Future<MediaPage> listMedia({
-    bool newest = true,
     int? skip,
     int? take,
   }) {
     return PhotoGallery._listMedia(
       album: this,
-      newest: newest,
       skip: skip,
       take: take,
     );

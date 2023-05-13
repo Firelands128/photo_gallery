@@ -5,9 +5,6 @@ part of photogallery;
 class MediaPage {
   final Album album;
 
-  /// The sort direction is newest or not
-  final bool newest;
-
   /// The start offset for those media.
   final int start;
 
@@ -22,8 +19,7 @@ class MediaPage {
 
   /// Creates a range of media from platform channel protocol.
   MediaPage.fromJson(this.album, dynamic json)
-      : newest = json['newest'],
-        start = json['start'],
+      : start = json['start'],
         items = json['items'].map<Medium>((x) => Medium.fromJson(x)).toList();
 
   /// Gets the next page of media in the album.
@@ -31,7 +27,6 @@ class MediaPage {
     assert(!isLast);
     return PhotoGallery._listMedia(
       album: album,
-      newest: newest,
       skip: end,
       take: items.length,
     );
