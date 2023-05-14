@@ -349,45 +349,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val media = mutableListOf<Map<String, Any?>>()
 
         this.context.run {
-            val isSelection = albumId != allAlbumId
-            val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
-            val selectionArgs = if (isSelection) arrayOf(albumId) else null
-            val orderBy = if (newest) {
-                "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
-            } else {
-                "${MediaStore.Images.Media.DATE_ADDED} ASC, ${MediaStore.Images.Media.DATE_MODIFIED} ASC"
-            }
-
-            val imageCursor: Cursor?
-
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                imageCursor = this.contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    imageMetadataProjection,
-                    android.os.Bundle().apply {
-                        // Selection
-                        putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
-                        putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
-                        // Sort
-                        putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
-                        // Limit & Offset
-                        if (take != null) putInt(ContentResolver.QUERY_ARG_LIMIT, take)
-                        if (skip != null) putInt(ContentResolver.QUERY_ARG_OFFSET, skip)
-                    },
-                    null
-                )
-            } else {
-                val offset = if (skip != null) "OFFSET $skip" else ""
-                val limit = if (take != null) "LIMIT $take" else ""
-
-                imageCursor = this.contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    imageMetadataProjection,
-                    selection,
-                    selectionArgs,
-                    "$orderBy $offset $limit"
-                )
-            }
+            val imageCursor = getImageCursor(albumId, newest, imageMetadataProjection, skip, take)
 
             imageCursor?.use { cursor ->
                 while (cursor.moveToNext()) {
@@ -406,45 +368,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         val media = mutableListOf<Map<String, Any?>>()
 
         this.context.run {
-            val isSelection = albumId != allAlbumId
-            val selection = if (isSelection) "${MediaStore.Video.Media.BUCKET_ID} = ?" else null
-            val selectionArgs = if (isSelection) arrayOf(albumId) else null
-            val orderBy = if (newest) {
-                "${MediaStore.Video.Media.DATE_ADDED} DESC, ${MediaStore.Video.Media.DATE_MODIFIED} DESC"
-            } else {
-                "${MediaStore.Video.Media.DATE_ADDED} ASC, ${MediaStore.Video.Media.DATE_MODIFIED} ASC"
-            }
-
-            val videoCursor: Cursor?
-
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                videoCursor = this.contentResolver.query(
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    videoMetadataProjection,
-                    android.os.Bundle().apply {
-                        // Selection
-                        putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
-                        putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
-                        // Sort
-                        putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
-                        // Limit & Offset
-                        if (take != null) putInt(ContentResolver.QUERY_ARG_LIMIT, take)
-                        if (skip != null) putInt(ContentResolver.QUERY_ARG_OFFSET, skip)
-                    },
-                    null
-                )
-            } else {
-                val offset = if (skip != null) "OFFSET $skip" else ""
-                val limit = if (take != null) "LIMIT $take" else ""
-
-                videoCursor = this.contentResolver.query(
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    videoMetadataProjection,
-                    selection,
-                    selectionArgs,
-                    "$orderBy $offset $limit"
-                )
-            }
+            val videoCursor = getVideoCursor(albumId, newest, videoMetadataProjection, skip, take)
 
             videoCursor?.use { cursor ->
                 while (cursor.moveToNext()) {
@@ -476,9 +400,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getImageMedia(mediumId: String): Map<String, Any?>? {
-        var imageMetadata: Map<String, Any?>? = null
-
-        this.context.run {
+        return this.context.run {
             val imageCursor = this.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 imageMetadataProjection,
@@ -489,18 +411,16 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
             imageCursor?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    imageMetadata = getImageMetadata(cursor)
+                    return@run getImageMetadata(cursor)
                 }
             }
-        }
 
-        return imageMetadata
+            return null
+        }
     }
 
     private fun getVideoMedia(mediumId: String): Map<String, Any?>? {
-        var videoMetadata: Map<String, Any?>? = null
-
-        this.context.run {
+        return this.context.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 videoMetadataProjection,
@@ -511,12 +431,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
 
             videoCursor?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    videoMetadata = getVideoMetadata(cursor)
+                    return@run getVideoMetadata(cursor)
                 }
             }
-        }
 
-        return videoMetadata
+            return null
+        }
     }
 
     private fun getThumbnail(
@@ -647,7 +567,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return this.context.run {
             val projection = arrayOf(MediaStore.Images.Media._ID)
 
-            val imageCursor = getImageCursor(albumId, newest, projection)
+            val imageCursor = getImageCursor(albumId, newest, projection, null, 1)
 
             imageCursor?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -671,7 +591,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         return this.context.run {
             val projection = arrayOf(MediaStore.Video.Media._ID)
 
-            val videoCursor = getVideoCursor(albumId, newest, projection)
+            val videoCursor = getVideoCursor(albumId, newest, projection, null, 1)
 
             videoCursor?.use { cursor ->
                 if (cursor.moveToNext()) {
@@ -699,7 +619,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 MediaStore.Images.Media.DATE_MODIFIED,
             )
 
-            val imageCursor = getImageCursor(albumId, newest, imageProjection)
+            val imageCursor = getImageCursor(albumId, newest, imageProjection, null, 1)
 
             var imageId: Long? = null
             var imageDateAdded: Long? = null
@@ -722,7 +642,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 MediaStore.Video.Media.DATE_MODIFIED,
             )
 
-            val videoCursor = getVideoCursor(albumId, newest, videoProjection)
+            val videoCursor = getVideoCursor(albumId, newest, videoProjection, null, 1)
 
             var videoId: Long? = null
             var videoDateAdded: Long? = null
@@ -764,7 +684,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getImageCursor(albumId: String, newest: Boolean, projection: Array<String>): Cursor? {
+    private fun getImageCursor(albumId: String, newest: Boolean, projection: Array<String>, skip: Int?, take: Int?): Cursor? {
         this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
@@ -787,18 +707,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
                         // Sort
                         putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
-                        // Limit
-                        putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
+                        // Offset & Limit
+                        if (skip != null) putInt(ContentResolver.QUERY_ARG_OFFSET, skip)
+                        if (take != null) putInt(ContentResolver.QUERY_ARG_LIMIT, take)
                     },
                     null
                 )
             } else {
+                val offset = if (skip != null) "OFFSET $skip" else ""
+                val limit = if (take != null) "LIMIT $take" else ""
+
                 imageCursor = this.contentResolver.query(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
                     selectionArgs,
-                    "$orderBy LIMIT 1"
+                    "$orderBy $offset $limit"
                 )
             }
 
@@ -806,7 +730,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoCursor(albumId: String, newest: Boolean, projection: Array<String>): Cursor? {
+    private fun getVideoCursor(albumId: String, newest: Boolean, projection: Array<String>, skip: Int?, take: Int?): Cursor? {
         this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Video.Media.BUCKET_ID} = ?" else null
@@ -829,18 +753,22 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
                         // Sort
                         putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, orderBy)
-                        // Limit
-                        putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
+                        // Offset & Limit
+                        if (skip != null) putInt(ContentResolver.QUERY_ARG_OFFSET, skip)
+                        if (take != null) putInt(ContentResolver.QUERY_ARG_LIMIT, take)
                     },
                     null
                 )
             } else {
+                val offset = if (skip != null) "OFFSET $skip" else ""
+                val limit = if (take != null) "LIMIT $take" else ""
+
                 videoCursor = this.contentResolver.query(
                     MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                     projection,
                     selection,
                     selectionArgs,
-                    "$orderBy LIMIT 1"
+                    "$orderBy $offset $limit"
                 )
             }
 
@@ -898,9 +826,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getVideoFile(mediumId: String): String? {
-        var path: String? = null
-
-        this.context.run {
+        return this.context.run {
             val videoCursor = this.contentResolver.query(
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 arrayOf(MediaStore.Video.Media.DATA),
@@ -912,12 +838,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             videoCursor?.use { cursor ->
                 if (cursor.moveToNext()) {
                     val dataColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
-                    path = cursor.getString(dataColumn)
+                    return@run cursor.getString(dataColumn)
                 }
             }
-        }
 
-        return path
+            return null
+        }
     }
 
     private fun cacheImage(mediumId: String, mimeType: String): String? {
