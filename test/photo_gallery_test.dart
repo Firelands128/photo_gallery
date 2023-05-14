@@ -22,14 +22,14 @@ void main() {
 
   test('list albums', () async {
     MediumType mediumType = MediumType.image;
+    bool newest = true;
     var result = await PhotoGallery.listAlbums(mediumType: mediumType);
-    var expected = Generator.generateAlbums(mediumType: mediumType);
+    var expected = Generator.generateAlbums(mediumType: mediumType, newest: newest);
     expect(result, expected);
   });
 
   test('list media', () async {
     MediumType mediumType = MediumType.image;
-    bool newest = true;
     int skip = 0;
     int take = 1;
     List<Album> albums = await PhotoGallery.listAlbums(mediumType: mediumType);
@@ -38,7 +38,6 @@ void main() {
     MediaPage expected = Generator.generateMediaPage(
       album: allAlbum,
       mediumType: mediumType,
-      newest: newest,
       skip: skip,
       take: take,
     );

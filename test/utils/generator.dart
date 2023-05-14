@@ -3,34 +3,37 @@ import 'dart:io';
 import 'package:photo_gallery/photo_gallery.dart';
 
 class Generator {
-  static dynamic generateAlbumsJson(
-      {MediumType? mediumType = MediumType.image}) {
+  static dynamic generateAlbumsJson({
+    MediumType? mediumType = MediumType.image,
+    bool? newest = true,
+  }) {
     return [
       {
         "id": "__ALL__",
         "mediumType": mediumTypeToJson(mediumType),
+        "newest": newest,
         "name": "All",
         "count": 5,
       },
       {
         "id": "AlbumId",
         "mediumType": mediumTypeToJson(mediumType),
+        "newest": newest,
         "name": "AlbumName",
         "count": 5,
       }
     ];
   }
 
-  static List<Album> generateAlbums({MediumType? mediumType}) {
-    return Generator.generateAlbumsJson(mediumType: mediumType)
-        .map<Album>((x) => Album.fromJson(x))
+  static List<Album> generateAlbums({MediumType? mediumType, bool newest = true}) {
+    return Generator.generateAlbumsJson(mediumType: mediumType, newest: newest)
+        .map<Album>((x) => Album.fromJson(x, mediumType, newest))
         .toList();
   }
 
   static dynamic generateMediaPageJson({
     required String albumId,
     MediumType? mediumType,
-    bool newest = true,
     int? skip,
     int? take,
   }) {
@@ -44,7 +47,6 @@ class Generator {
     }
 
     return {
-      "newest": newest,
       "start": skip,
       "items": items,
     };
@@ -69,14 +71,12 @@ class Generator {
   static MediaPage generateMediaPage({
     required Album album,
     MediumType? mediumType,
-    bool newest = true,
     int? skip,
     int? take,
   }) {
     dynamic json = generateMediaPageJson(
       albumId: album.id,
       mediumType: mediumType,
-      newest: newest,
       skip: skip,
       take: take ?? album.count,
     );
