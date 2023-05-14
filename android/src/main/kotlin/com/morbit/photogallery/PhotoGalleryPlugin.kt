@@ -793,7 +793,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getImageFile(mediumId: String, mimeType: String? = null): String? {
-        this.context.run {
+        return this.context.run {
             mimeType?.let {
                 val type = this.contentResolver.getType(
                     ContentUris.withAppendedId(
@@ -802,7 +802,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     )
                 )
                 if (it != type) {
-                    return cacheImage(mediumId, it)
+                    return@run cacheImage(mediumId, it)
                 }
             }
 
@@ -817,12 +817,12 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             imageCursor?.use { cursor ->
                 if (cursor.moveToNext()) {
                     val dataColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATA)
-                    return cursor.getString(dataColumn)
+                    return@run cursor.getString(dataColumn)
                 }
             }
-        }
 
-        return null
+            return null
+        }
     }
 
     private fun getVideoFile(mediumId: String): String? {
@@ -867,7 +867,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             }
         }
 
-        bitmap?.let {
+        return bitmap?.let {
             val compressFormat: Bitmap.CompressFormat
             when (mimeType) {
                 "image/jpeg" -> {
@@ -875,7 +875,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     val out = FileOutputStream(path)
                     compressFormat = Bitmap.CompressFormat.JPEG
                     it.compress(compressFormat, 100, out)
-                    return path.absolutePath
+                    path.absolutePath
                 }
 
                 "image/png" -> {
@@ -883,7 +883,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                     val out = FileOutputStream(path)
                     compressFormat = Bitmap.CompressFormat.PNG
                     it.compress(compressFormat, 100, out)
-                    return path.absolutePath
+                    path.absolutePath
                 }
 
                 "image/webp" -> {
@@ -896,16 +896,14 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                         Bitmap.CompressFormat.WEBP
                     }
                     it.compress(compressFormat, 100, out)
-                    return path.absolutePath
+                    path.absolutePath
                 }
 
                 else -> {
-                    return null
+                    null
                 }
             }
         }
-
-        return null
     }
 
     private fun getImageMetadata(cursor: Cursor): Map<String, Any?> {
