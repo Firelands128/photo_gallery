@@ -1,3 +1,14 @@
+## 2.0.0
+
+*Breaking changes:
+• Move "newest" parameter from "listMedia" to "listAlbums" API
+• Move "newest" property from "MediaPage" to "Media"
+• Add "newest" parameter of getAlbumThumbnail API
+• Update to "album" parameter of AlbumThumbnailProvider
+• Update "mediumType" to be optional parameter of "listAlbums" to allow fetch both type of media
+• Remove unnecessary "total" parameter of "listMedia" API
+• Remove unnecessary "total" property of "MediaPage", use "total" of "Album" instead.
+
 ## 1.2.2
 
 Upgrade deprecated code.
