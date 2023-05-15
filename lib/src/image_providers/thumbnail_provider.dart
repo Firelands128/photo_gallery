@@ -17,7 +17,7 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
   final bool? highQuality;
 
   @override
-  ImageStreamCompleter loadBuffer(key, decode) {
+  ImageStreamCompleter loadImage(key, decode) {
     return MultiFrameImageStreamCompleter(
       codec: _loadAsync(key, decode),
       scale: 1.0,
@@ -27,7 +27,7 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
     );
   }
 
-  Future<ui.Codec> _loadAsync(ThumbnailProvider key, DecoderBufferCallback decode) async {
+  Future<ui.Codec> _loadAsync(ThumbnailProvider key, ImageDecoderCallback decode) async {
     assert(key == this);
     final data = await PhotoGallery.getThumbnail(
       mediumId: mediumId,
