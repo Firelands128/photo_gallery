@@ -1,3 +1,7 @@
+## 2.0.1
+
+"DecoderBufferCallback" is deprecated. Use "ImageDecoderCallback" with ImageProvider.loadImage instead.
+
 ## 2.0.0
 
 *Breaking changes:
