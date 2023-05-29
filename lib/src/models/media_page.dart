@@ -19,7 +19,7 @@ class MediaPage {
 
   /// Creates a range of media from platform channel protocol.
   MediaPage.fromJson(this.album, dynamic json)
-      : start = json['start'],
+      : start = json['start'] ?? 0,
         items = json['items'].map<Medium>((x) => Medium.fromJson(x)).toList();
 
   /// Gets the next page of media in the album.
@@ -42,8 +42,7 @@ class MediaPage {
           listEquals(items, other.items);
 
   @override
-  int get hashCode =>
-      album.hashCode ^ start.hashCode ^ items.hashCode;
+  int get hashCode => album.hashCode ^ start.hashCode ^ items.hashCode;
 
   @override
   String toString() {
