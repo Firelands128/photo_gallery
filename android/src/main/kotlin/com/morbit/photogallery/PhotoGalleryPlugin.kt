@@ -359,7 +359,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return mapOf(
-            "start" to skip,
+            "start" to (skip ?: 0),
             "items" to media
         )
     }
@@ -378,7 +378,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
 
         return mapOf(
-            "start" to skip,
+            "start" to (skip ?: 0),
             "items" to media
         )
     }
