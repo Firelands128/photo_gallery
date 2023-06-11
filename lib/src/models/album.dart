@@ -27,7 +27,7 @@ class Album {
         mediumType = mediumType,
         newest = newest,
         name = json['name'],
-        count = json['count'];
+        count = json['count'] ?? 0;
 
   /// list media in the album.
   ///

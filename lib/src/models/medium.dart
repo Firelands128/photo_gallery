@@ -49,7 +49,7 @@ class Medium {
     this.width,
     this.height,
     this.size,
-    this.orientation = 0,
+    this.orientation,
     this.mimeType,
     this.duration = 0,
     this.creationDate,

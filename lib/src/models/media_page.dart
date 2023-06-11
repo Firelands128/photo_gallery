@@ -19,7 +19,7 @@ class MediaPage {
 
   /// Creates a range of media from platform channel protocol.
   MediaPage.fromJson(this.album, dynamic json)
-      : start = json['start'],
+      : start = json['start'] ?? 0,
         items = json['items'].map<Medium>((x) => Medium.fromJson(x)).toList();
 
   /// Gets the next page of media in the album.
