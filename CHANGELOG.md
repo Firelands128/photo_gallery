@@ -1,3 +1,7 @@
+## 2.0.2
+
+Add some default value of models' property.
+
 ## 2.0.1
 
 "DecoderBufferCallback" is deprecated. Use "ImageDecoderCallback" with ImageProvider.loadImage instead.
