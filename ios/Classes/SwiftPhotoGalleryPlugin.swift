@@ -25,7 +25,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let newest = arguments["newest"] as! Bool
       let skip = arguments["skip"] as? NSNumber
       let take = arguments["take"] as? NSNumber
-      result(listMedia(albumId: albumId, mediumType: mediumType, newest: newest, skip: skip, take: take))
+      let lightWeight = arguments["lightWeight"] as? Bool
+      result(listMedia(albumId: albumId, mediumType: mediumType, newest: newest, skip: skip, take: take, lightWeight: lightWeight))
     }
     else if(call.method == "getMedium") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -182,7 +183,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
-  private func listMedia(albumId: String, mediumType: String?, newest: Bool, skip: NSNumber?, take: NSNumber?) -> NSDictionary {
+  private func listMedia(albumId: String, mediumType: String?, newest: Bool, skip: NSNumber?, take: NSNumber?, lightWeight: Bool? = false) -> NSDictionary {
     let fetchOptions = PHFetchOptions()
     fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
     fetchOptions.sortDescriptors = [
@@ -203,7 +204,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     var items = [[String: Any?]]()
     for index in start..<end {
       let asset = fetchResult.object(at: index) as PHAsset
-      items.append(getMediumFromAsset(asset: asset))
+      if(lightWeight == true) {
+        items.append(getMediumFromAssetLightWeight(asset: asset))
+      } else {
+        items.append(getMediumFromAsset(asset: asset))
+      }
     }
     
     return [
@@ -463,6 +468,19 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
       "size": size,
+      "duration": NSInteger(asset.duration * 1000),
+      "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
+      "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
+    ]
+  }
+
+
+  private func getMediumFromAssetLightWeight(asset: PHAsset) -> [String: Any?] {
+    return [
+      "id": asset.localIdentifier,
+      "mediumType": toDartMediumType(value: asset.mediaType),
+      "height": asset.pixelHeight,
+      "width": asset.pixelWidth,
       "duration": NSInteger(asset.duration * 1000),
       "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
