@@ -37,6 +37,16 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         }
       )
     }
+    else if(call.method == "deleteMedium") {
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let mediumId = arguments["mediumId"] as! String
+      deleteMedium(
+        mediumId: mediumId,
+        completion: { (success: Bool, error: Error?) -> Void in
+          result(success)
+        }
+      )
+    }
     else if(call.method == "getThumbnail") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let mediumId = arguments["mediumId"] as! String
@@ -221,6 +231,30 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       )
     }
   }
+
+  private func deleteMedium(mediumId: String, completion: @escaping (Bool, Error?) -> Void) {
+      let fetchOptions = PHFetchOptions()
+      if #available(iOS 9, *) {
+        fetchOptions.fetchLimit = 1
+      }
+      let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
+      
+      if assets.count <= 0 {
+          completion(false, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
+      } else {
+          let asset: PHAsset = assets[0]
+          deleteAssets(assets: [asset]) { success, error in
+              completion(success, error)
+          }
+      }
+  }
+
+  private func deleteAssets(assets: [PHAsset], completion: @escaping (Bool, Error?) -> Void) {
+    PHPhotoLibrary.shared().performChanges({
+        PHAssetChangeRequest.deleteAssets(assets as NSFastEnumeration)
+    }, completionHandler: completion)
+  }
+
   
   private func getThumbnail(
     mediumId: String,
@@ -586,6 +620,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return nil
   }
+
   
   private func cachePath() -> URL {
     let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)

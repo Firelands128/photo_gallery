@@ -31,7 +31,9 @@ class PhotoGallery {
       'newest': newest,
       'hideIfEmpty': hideIfEmpty,
     });
-    return json.map<Album>((album) => Album.fromJson(album, mediumType, newest)).toList();
+    return json
+        .map<Album>((album) => Album.fromJson(album, mediumType, newest))
+        .toList();
   }
 
   /// List all available media in a specific album, support pagination of media
@@ -60,6 +62,21 @@ class PhotoGallery {
       'mediumType': mediumTypeToJson(mediumType),
     });
     return Medium.fromJson(json);
+  }
+
+  /// Delete medium by medium id
+  static Future<bool> deleteMedium({
+    required String mediumId,
+  }) async {
+    if (!Platform.isIOS) {
+      throw UnsupportedError('This function is only available on iOS');
+    }
+
+    final result = await _channel.invokeMethod('deleteMedium', {
+      'mediumId': mediumId,
+    });
+
+    return result as bool;
   }
 
   /// Get medium thumbnail by medium id
