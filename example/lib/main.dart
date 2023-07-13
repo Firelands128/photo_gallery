@@ -42,7 +42,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<bool> _promptPermissionSetting() async {
     if (Platform.isIOS) {
-      if (await Permission.storage.request().isGranted) {
+      if (await Permission.photos.request().isGranted) {
         return true;
       }
     }
