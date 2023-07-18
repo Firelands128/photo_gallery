@@ -3,7 +3,7 @@ part of photogallery;
 /// A medium in the gallery.
 ///
 /// It can be of image or video [mediumType].
-@immutable
+// @immutable
 class Medium {
   /// A unique identifier for the medium.
   final String id;
@@ -40,6 +40,8 @@ class Medium {
 
   /// The date at which the photo or video was modified.
   final DateTime? modifiedDate;
+
+  bool isValid = true;
 
   Medium({
     required this.id,
@@ -169,5 +171,9 @@ class Medium {
         'mimeType: $mimeType, '
         'creationDate: $creationDate, '
         'modifiedDate: $modifiedDate}';
+  }
+
+  void updateIsValide(bool value) {
+    isValid = value;
   }
 }

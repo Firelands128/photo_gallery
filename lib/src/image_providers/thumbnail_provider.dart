@@ -8,6 +8,8 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
     this.height,
     this.width,
     this.highQuality = false,
+    required this.onInvalidThumbnailAssetKey,
+    this.onThumbnailInvalid,
   });
 
   final String mediumId;
@@ -15,6 +17,8 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
   final int? height;
   final int? width;
   final bool? highQuality;
+  final String onInvalidThumbnailAssetKey;
+  final void Function(bool)? onThumbnailInvalid;
 
   @override
   ImageStreamCompleter loadImage(key, decode) {
@@ -27,16 +31,27 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
     );
   }
 
-  Future<ui.Codec> _loadAsync(ThumbnailProvider key, ImageDecoderCallback decode) async {
+  Future<ui.Codec> _loadAsync(
+    ThumbnailProvider key,
+    ImageDecoderCallback decode,
+  ) async {
     assert(key == this);
-    final data = await PhotoGallery.getThumbnail(
-      mediumId: mediumId,
-      mediumType: mediumType,
-      height: height,
-      width: width,
-      highQuality: highQuality,
-    );
-    ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
+    late ui.ImmutableBuffer buffer;
+    try {
+      final data = await PhotoGallery.getThumbnail(
+        mediumId: mediumId,
+        mediumType: mediumType,
+        height: height,
+        width: width,
+        highQuality: highQuality,
+      );
+      buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
+    } catch (e) {
+      buffer = await ui.ImmutableBuffer.fromAsset(onInvalidThumbnailAssetKey);
+      if (onThumbnailInvalid != null) {
+        onThumbnailInvalid!(false);
+      }
+    }
     return decode(buffer);
   }
 

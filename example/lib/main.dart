@@ -83,7 +83,8 @@ class _MyAppState extends State<MyApp> {
                         ...?_albums?.map(
                           (album) => GestureDetector(
                             onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => AlbumPage(album)),
+                              MaterialPageRoute(
+                                  builder: (context) => AlbumPage(album)),
                             ),
                             child: Column(
                               children: <Widget>[
@@ -95,7 +96,8 @@ class _MyAppState extends State<MyApp> {
                                     width: gridWidth,
                                     child: FadeInImage(
                                       fit: BoxFit.cover,
-                                      placeholder: MemoryImage(kTransparentImage),
+                                      placeholder:
+                                          MemoryImage(kTransparentImage),
                                       image: AlbumThumbnailProvider(
                                         album: album,
                                         highQuality: true,
@@ -197,6 +199,8 @@ class AlbumPageState extends State<AlbumPage> {
                       mediumId: medium.id,
                       mediumType: medium.mediumType,
                       highQuality: true,
+                      onInvalidThumbnailAssetKey:
+                          'assets/images/error_thumbnail.jpg',
                     ),
                   ),
                 ),
@@ -293,7 +297,9 @@ class _VideoProviderState extends State<VideoProvider> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    _controller!.value.isPlaying ? _controller!.pause() : _controller!.play();
+                    _controller!.value.isPlaying
+                        ? _controller!.pause()
+                        : _controller!.play();
                   });
                 },
                 child: Icon(
