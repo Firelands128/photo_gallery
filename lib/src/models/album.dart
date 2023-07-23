@@ -36,11 +36,13 @@ class Album {
   Future<MediaPage> listMedia({
     int? skip,
     int? take,
+    bool? lightWeight,
   }) {
     return PhotoGallery._listMedia(
       album: this,
       skip: skip,
       take: take,
+      lightWeight: lightWeight,
     );
   }
 

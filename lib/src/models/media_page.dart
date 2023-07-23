@@ -11,6 +11,8 @@ class MediaPage {
   /// The current items.
   final List<Medium> items;
 
+  final bool? lightWeight;
+
   /// The end index in the album.
   int get end => start + items.length;
 
@@ -18,7 +20,7 @@ class MediaPage {
   bool get isLast => end >= album.count;
 
   /// Creates a range of media from platform channel protocol.
-  MediaPage.fromJson(this.album, dynamic json)
+  MediaPage.fromJson(this.album, dynamic json, {this.lightWeight})
       : start = json['start'] ?? 0,
         items = json['items'].map<Medium>((x) => Medium.fromJson(x)).toList();
 
@@ -29,6 +31,7 @@ class MediaPage {
       album: album,
       skip: end,
       take: items.length,
+      lightWeight: lightWeight
     );
   }
 
@@ -42,8 +45,7 @@ class MediaPage {
           listEquals(items, other.items);
 
   @override
-  int get hashCode =>
-      album.hashCode ^ start.hashCode ^ items.hashCode;
+  int get hashCode => album.hashCode ^ start.hashCode ^ items.hashCode;
 
   @override
   String toString() {
