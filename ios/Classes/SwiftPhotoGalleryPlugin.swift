@@ -25,7 +25,8 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       let newest = arguments["newest"] as! Bool
       let skip = arguments["skip"] as? NSNumber
       let take = arguments["take"] as? NSNumber
-      result(listMedia(albumId: albumId, mediumType: mediumType, newest: newest, skip: skip, take: take))
+      let lightWeight = arguments["lightWeight"] as? Bool
+      result(listMedia(albumId: albumId, mediumType: mediumType, newest: newest, skip: skip, take: take, lightWeight: lightWeight))
     }
     else if(call.method == "getMedium") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -34,6 +35,16 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
         mediumId: mediumId,
         completion: { (data: [String: Any?]?, error: Error?) -> Void in
           result(data)
+        }
+      )
+    }
+    else if(call.method == "deleteMedium") {
+      let arguments = call.arguments as! Dictionary<String, AnyObject>
+      let mediumId = arguments["mediumId"] as! String
+      deleteMedium(
+        mediumId: mediumId,
+        completion: { (success: Bool, error: Error?) -> Void in
+          result(success)
         }
       )
     }
@@ -172,7 +183,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return PHAsset.fetchAssets(in: collection ?? PHAssetCollection.init(), options: options).count
   }
   
-  private func listMedia(albumId: String, mediumType: String?, newest: Bool, skip: NSNumber?, take: NSNumber?) -> NSDictionary {
+  private func listMedia(albumId: String, mediumType: String?, newest: Bool, skip: NSNumber?, take: NSNumber?, lightWeight: Bool? = false) -> NSDictionary {
     let fetchOptions = PHFetchOptions()
     fetchOptions.predicate = predicateFromMediumType(mediumType: mediumType)
     fetchOptions.sortDescriptors = [
@@ -193,7 +204,11 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     var items = [[String: Any?]]()
     for index in start..<end {
       let asset = fetchResult.object(at: index) as PHAsset
-      items.append(getMediumFromAsset(asset: asset))
+      if(lightWeight == true) {
+        items.append(getMediumFromAssetLightWeight(asset: asset))
+      } else {
+        items.append(getMediumFromAsset(asset: asset))
+      }
     }
     
     return [
@@ -221,6 +236,30 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       )
     }
   }
+
+  private func deleteMedium(mediumId: String, completion: @escaping (Bool, Error?) -> Void) {
+      let fetchOptions = PHFetchOptions()
+      if #available(iOS 9, *) {
+        fetchOptions.fetchLimit = 1
+      }
+      let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
+      
+      if assets.count <= 0 {
+          completion(false, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
+      } else {
+          let asset: PHAsset = assets[0]
+          deleteAssets(assets: [asset]) { success, error in
+              completion(success, error)
+          }
+      }
+  }
+
+  private func deleteAssets(assets: [PHAsset], completion: @escaping (Bool, Error?) -> Void) {
+    PHPhotoLibrary.shared().performChanges({
+        PHAssetChangeRequest.deleteAssets(assets as NSFastEnumeration)
+    }, completionHandler: completion)
+  }
+
   
   private func getThumbnail(
     mediumId: String,
@@ -434,6 +473,19 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
   }
+
+
+  private func getMediumFromAssetLightWeight(asset: PHAsset) -> [String: Any?] {
+    return [
+      "id": asset.localIdentifier,
+      "mediumType": toDartMediumType(value: asset.mediaType),
+      "height": asset.pixelHeight,
+      "width": asset.pixelWidth,
+      "duration": NSInteger(asset.duration * 1000),
+      "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
+      "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
+    ]
+  }
   
   private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
@@ -586,6 +638,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
     return nil
   }
+
   
   private func cachePath() -> URL {
     let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
