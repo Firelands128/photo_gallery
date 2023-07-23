@@ -25,8 +25,7 @@ class PhotoProvider extends ImageProvider<PhotoProvider> {
     assert(key == this);
     final file = await PhotoGallery.getFile(
         mediumId: mediumId, mediumType: MediumType.image, mimeType: mimeType);
-    final bytes = await file.readAsBytes();
-    ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+    ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromFilePath(file.path);
     return decode(buffer);
   }
 
