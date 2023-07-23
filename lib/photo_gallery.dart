@@ -41,6 +41,7 @@ class PhotoGallery {
     required Album album,
     int? skip,
     int? take,
+    bool? lightWeight,
   }) async {
     final json = await _channel.invokeMethod('listMedia', {
       'albumId': album.id,
@@ -48,6 +49,7 @@ class PhotoGallery {
       'newest': album.newest,
       'skip': skip,
       'take': take,
+      'lightWeight': lightWeight,
     });
     return MediaPage.fromJson(album, json);
   }
@@ -65,18 +67,14 @@ class PhotoGallery {
   }
 
   /// Delete medium by medium id
-  static Future<bool> deleteMedium({
+  static Future<void> deleteMedium({
     required String mediumId,
+    MediumType? mediumType,
   }) async {
-    if (!Platform.isIOS) {
-      throw UnsupportedError('This function is only available on iOS');
-    }
-
-    final result = await _channel.invokeMethod('deleteMedium', {
+    await _channel.invokeMethod('deleteMedium', {
       'mediumId': mediumId,
+      'mediumType': mediumTypeToJson(mediumType),
     });
-
-    return result as bool;
   }
 
   /// Get medium thumbnail by medium id

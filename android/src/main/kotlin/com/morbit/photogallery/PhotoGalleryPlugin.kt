@@ -1,5 +1,7 @@
 package com.morbit.photogallery
 
+import android.app.Activity
+import android.app.RecoverableSecurityException
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
@@ -11,6 +13,8 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -19,11 +23,12 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Collections
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /** PhotoGalleryPlugin */
-class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
+class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     companion object {
         // This static function is optional and equivalent to onAttachedToEngine. It supports the old
         // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
@@ -61,6 +66,15 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Images.Media.DATE_MODIFIED
         )
 
+        val imageBriefMetadataProjection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.WIDTH,
+            MediaStore.Images.Media.HEIGHT,
+            MediaStore.Images.Media.ORIENTATION,
+            MediaStore.Images.Media.DATE_ADDED,
+            MediaStore.Images.Media.DATE_MODIFIED
+        )
+
         val videoMetadataProjection = arrayOf(
             MediaStore.Video.Media._ID,
             MediaStore.Video.Media.DISPLAY_NAME,
@@ -73,22 +87,48 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
             MediaStore.Video.Media.DATE_ADDED,
             MediaStore.Video.Media.DATE_MODIFIED
         )
+
+        val videoBriefMetadataProjection = arrayOf(
+            MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.WIDTH,
+            MediaStore.Video.Media.HEIGHT,
+            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.DATE_ADDED,
+            MediaStore.Video.Media.DATE_MODIFIED
+        )
     }
 
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
+    private var activity: Activity? = null
 
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "photo_gallery")
-        val plugin = PhotoGalleryPlugin()
+        val plugin = this
         plugin.context = flutterPluginBinding.applicationContext
         channel.setMethodCallHandler(plugin)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+    }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        this.activity = binding.activity;
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        this.activity = binding.activity;
+    }
+
+    override fun onDetachedFromActivity() {
+        this.activity = null
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        this.activity = null
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -108,9 +148,10 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 val newest = call.argument<Boolean>("newest")
                 val skip = call.argument<Int>("skip")
                 val take = call.argument<Int>("take")
+                val lightWeight = call.argument<Boolean>("lightWeight")
                 executor.submit {
                     result.success(
-                        listMedia(mediumType, albumId!!, newest!!, skip, take)
+                        listMedia(mediumType, albumId!!, newest!!, skip, take, lightWeight)
                     )
                 }
             }
@@ -159,6 +200,16 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 executor.submit {
                     result.success(
                         getFile(mediumId!!, mediumType, mimeType)
+                    )
+                }
+            }
+
+            "deleteMedium" -> {
+                val mediumId = call.argument<String>("mediumId")
+                val mediumType = call.argument<String>("mediumType")
+                executor.submit {
+                    result.success(
+                        deleteMedium(mediumId!!, mediumType)
                     )
                 }
             }
@@ -311,20 +362,21 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         albumId: String,
         newest: Boolean,
         skip: Int?,
-        take: Int?
+        take: Int?,
+        lightWeight: Boolean? = false
     ): Map<String, Any?> {
         return when (mediumType) {
             imageType -> {
-                listImages(albumId, newest, skip, take)
+                listImages(albumId, newest, skip, take, lightWeight)
             }
 
             videoType -> {
-                listVideos(albumId, newest, skip, take)
+                listVideos(albumId, newest, skip, take, lightWeight)
             }
 
             else -> {
-                val images = listImages(albumId, newest, null, null)["items"] as List<Map<String, Any?>>
-                val videos = listVideos(albumId, newest, null, null)["items"] as List<Map<String, Any?>>
+                val images = listImages(albumId, newest, null, null, lightWeight)["items"] as List<Map<String, Any?>>
+                val videos = listVideos(albumId, newest, null, null, lightWeight)["items"] as List<Map<String, Any?>>
                 val comparator = compareBy<Map<String, Any?>> { it["creationDate"] as Long }
                     .thenBy { it["modifiedDate"] as Long }
                 var items = (images + videos).sortedWith(comparator)
@@ -345,15 +397,23 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun listImages(albumId: String, newest: Boolean, skip: Int?, take: Int?): Map<String, Any?> {
+    private fun listImages(
+        albumId: String,
+        newest: Boolean,
+        skip: Int?,
+        take: Int?,
+        lightWeight: Boolean? = false
+    ): Map<String, Any?> {
         val media = mutableListOf<Map<String, Any?>>()
 
         this.context.run {
-            val imageCursor = getImageCursor(albumId, newest, imageMetadataProjection, skip, take)
+            val projection = if (lightWeight == true) imageBriefMetadataProjection else imageMetadataProjection
+            val imageCursor = getImageCursor(albumId, newest, projection, skip, take)
 
             imageCursor?.use { cursor ->
                 while (cursor.moveToNext()) {
-                    media.add(getImageMetadata(cursor))
+                    val metadata = if (lightWeight == true) getImageBriefMetadata(cursor) else getImageMetadata(cursor)
+                    media.add(metadata)
                 }
             }
         }
@@ -364,15 +424,23 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         )
     }
 
-    private fun listVideos(albumId: String, newest: Boolean, skip: Int?, take: Int?): Map<String, Any?> {
+    private fun listVideos(
+        albumId: String,
+        newest: Boolean,
+        skip: Int?,
+        take: Int?,
+        lightWeight: Boolean? = false
+    ): Map<String, Any?> {
         val media = mutableListOf<Map<String, Any?>>()
 
         this.context.run {
-            val videoCursor = getVideoCursor(albumId, newest, videoMetadataProjection, skip, take)
+            val projection = if (lightWeight == true) videoBriefMetadataProjection else videoMetadataProjection
+            val videoCursor = getVideoCursor(albumId, newest, projection, skip, take)
 
             videoCursor?.use { cursor ->
                 while (cursor.moveToNext()) {
-                    media.add(getVideoMetadata(cursor))
+                    val metadata = if (lightWeight == true) getVideoBriefMetadata(cursor) else getVideoMetadata(cursor)
+                    media.add(metadata)
                 }
             }
         }
@@ -684,7 +752,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getImageCursor(albumId: String, newest: Boolean, projection: Array<String>, skip: Int?, take: Int?): Cursor? {
+    private fun getImageCursor(
+        albumId: String,
+        newest: Boolean,
+        projection: Array<String>,
+        skip: Int?,
+        take: Int?
+    ): Cursor? {
         this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
@@ -730,7 +804,13 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getVideoCursor(albumId: String, newest: Boolean, projection: Array<String>, skip: Int?, take: Int?): Cursor? {
+    private fun getVideoCursor(
+        albumId: String,
+        newest: Boolean,
+        projection: Array<String>,
+        skip: Int?,
+        take: Int?
+    ): Cursor? {
         this.context.run {
             val isSelection = albumId != allAlbumId
             val selection = if (isSelection) "${MediaStore.Video.Media.BUCKET_ID} = ?" else null
@@ -950,6 +1030,38 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         )
     }
 
+    private fun getImageBriefMetadata(cursor: Cursor): Map<String, Any?> {
+        val idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+        val widthColumn = cursor.getColumnIndex(MediaStore.Images.Media.WIDTH)
+        val heightColumn = cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT)
+        val orientationColumn = cursor.getColumnIndex(MediaStore.Images.Media.ORIENTATION)
+        val dateAddedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED)
+        val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Images.Media.DATE_MODIFIED)
+
+        val id = cursor.getLong(idColumn)
+        val width = cursor.getLong(widthColumn)
+        val height = cursor.getLong(heightColumn)
+        val orientation = cursor.getLong(orientationColumn)
+        var dateAdded: Long? = null
+        if (cursor.getType(dateAddedColumn) == FIELD_TYPE_INTEGER) {
+            dateAdded = cursor.getLong(dateAddedColumn) * 1000
+        }
+        var dateModified: Long? = null
+        if (cursor.getType(dateModifiedColumn) == FIELD_TYPE_INTEGER) {
+            dateModified = cursor.getLong(dateModifiedColumn) * 1000
+        }
+
+        return mapOf(
+            "id" to id.toString(),
+            "mediumType" to imageType,
+            "width" to width,
+            "height" to height,
+            "orientation" to orientationDegree2Value(orientation),
+            "creationDate" to dateAdded,
+            "modifiedDate" to dateModified
+        )
+    }
+
     private fun getVideoMetadata(cursor: Cursor): Map<String, Any?> {
         val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
         val filenameColumn = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
@@ -994,6 +1106,38 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
         )
     }
 
+    private fun getVideoBriefMetadata(cursor: Cursor): Map<String, Any?> {
+        val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
+        val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
+        val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
+        val durationColumn = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+        val dateAddedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED)
+        val dateModifiedColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATE_MODIFIED)
+
+        val id = cursor.getLong(idColumn)
+        val width = cursor.getLong(widthColumn)
+        val height = cursor.getLong(heightColumn)
+        val duration = cursor.getLong(durationColumn)
+        var dateAdded: Long? = null
+        if (cursor.getType(dateAddedColumn) == FIELD_TYPE_INTEGER) {
+            dateAdded = cursor.getLong(dateAddedColumn) * 1000
+        }
+        var dateModified: Long? = null
+        if (cursor.getType(dateModifiedColumn) == FIELD_TYPE_INTEGER) {
+            dateModified = cursor.getLong(dateModifiedColumn) * 1000
+        }
+
+        return mapOf(
+            "id" to id.toString(),
+            "mediumType" to videoType,
+            "width" to width,
+            "height" to height,
+            "duration" to duration,
+            "creationDate" to dateAdded,
+            "modifiedDate" to dateModified
+        )
+    }
+
     private fun orientationDegree2Value(degree: Long): Int {
         return when (degree) {
             0L -> 1
@@ -1011,6 +1155,148 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler {
                 cachePath.mkdirs()
             }
             return@run cachePath
+        }
+    }
+
+    private fun deleteMedium(mediumId: String, mediumType: String?) {
+        when (mediumType) {
+            imageType -> {
+                deleteImageMedium(mediumId)
+            }
+
+            videoType -> {
+                deleteVideoMedium(mediumId)
+            }
+
+            else -> {
+                deleteImageMedium(mediumId)
+                deleteVideoMedium(mediumId)
+            }
+        }
+    }
+
+
+    private fun deleteImageMedium(mediumId: String) {
+        this.context.run {
+            val selection = "${MediaStore.Images.Media._ID} = ?"
+            val selectionArgs = arrayOf(mediumId)
+            val imageCursor = this.contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                null,
+                selection,
+                selectionArgs,
+                null
+            )
+            imageCursor?.use {
+                if (it.count > 0) {
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                        val pendingIntent = MediaStore.createTrashRequest(
+                            this.contentResolver,
+                            Collections.singleton(
+                                ContentUris.withAppendedId(
+                                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                    mediumId.toLong()
+                                )
+                            ),
+                            true
+                        )
+                        activity?.startIntentSenderForResult(
+                            pendingIntent.intentSender,
+                            0,
+                            null,
+                            0,
+                            0,
+                            0
+                        )
+                    } else {
+                        try {
+                            this.contentResolver.delete(
+                                ContentUris.withAppendedId(
+                                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                    mediumId.toLong()
+                                ),
+                                selection,
+                                selectionArgs
+                            )
+                        } catch (e: SecurityException) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val securityException = e as? RecoverableSecurityException ?: throw e
+                                val intentSender = securityException.userAction.actionIntent.intentSender
+                                activity?.startIntentSenderForResult(
+                                    intentSender,
+                                    0,
+                                    null,
+                                    0,
+                                    0,
+                                    0
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun deleteVideoMedium(mediumId: String) {
+        this.context.run {
+            val selection = "${MediaStore.Video.Media._ID} = ?"
+            val selectionArgs = arrayOf(mediumId)
+            val videoCursor = this.contentResolver.query(
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                null,
+                selection,
+                selectionArgs,
+                null
+            )
+            videoCursor?.use {
+                if (it.count > 0) {
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                        val pendingIntent = MediaStore.createTrashRequest(
+                            this.contentResolver,
+                            Collections.singleton(
+                                ContentUris.withAppendedId(
+                                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                                    mediumId.toLong()
+                                )
+                            ),
+                            true
+                        )
+                        activity?.startIntentSenderForResult(
+                            pendingIntent.intentSender,
+                            0,
+                            null,
+                            0,
+                            0,
+                            0
+                        )
+                    } else {
+                        try {
+                            this.contentResolver.delete(
+                                ContentUris.withAppendedId(
+                                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                                    mediumId.toLong()
+                                ),
+                                selection,
+                                selectionArgs
+                            )
+                        } catch (e: SecurityException) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val securityException = e as? RecoverableSecurityException ?: throw e
+                                val intentSender = securityException.userAction.actionIntent.intentSender
+                                activity?.startIntentSenderForResult(
+                                    intentSender,
+                                    0,
+                                    null,
+                                    0,
+                                    0,
+                                    0
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
