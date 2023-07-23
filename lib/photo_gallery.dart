@@ -31,9 +31,7 @@ class PhotoGallery {
       'newest': newest,
       'hideIfEmpty': hideIfEmpty,
     });
-    return json
-        .map<Album>((album) => Album.fromJson(album, mediumType, newest))
-        .toList();
+    return json.map<Album>((album) => Album.fromJson(album, mediumType, newest)).toList();
   }
 
   /// List all available media in a specific album, support pagination of media
@@ -64,17 +62,6 @@ class PhotoGallery {
       'mediumType': mediumTypeToJson(mediumType),
     });
     return Medium.fromJson(json);
-  }
-
-  /// Delete medium by medium id
-  static Future<void> deleteMedium({
-    required String mediumId,
-    MediumType? mediumType,
-  }) async {
-    await _channel.invokeMethod('deleteMedium', {
-      'mediumId': mediumId,
-      'mediumType': mediumTypeToJson(mediumType),
-    });
   }
 
   /// Get medium thumbnail by medium id
@@ -129,6 +116,17 @@ class PhotoGallery {
     }) as String?;
     if (path == null) throw "Cannot get file $mediumId with type $mimeType";
     return File(path);
+  }
+
+  /// Delete medium by medium id
+  static Future<void> deleteMedium({
+    required String mediumId,
+    MediumType? mediumType,
+  }) async {
+    await _channel.invokeMethod('deleteMedium', {
+      'mediumId': mediumId,
+      'mediumType': mediumTypeToJson(mediumType),
+    });
   }
 
   static Future<void> cleanCache() async {

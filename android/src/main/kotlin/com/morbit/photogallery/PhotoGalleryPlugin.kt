@@ -483,7 +483,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
-            return null
+            return@run null
         }
     }
 
@@ -503,7 +503,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
-            return null
+            return@run null
         }
     }
 
@@ -645,7 +645,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
-            return null
+            return@run null
         }
     }
 
@@ -669,7 +669,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
-            return null
+            return@run null
         }
     }
 
@@ -901,7 +901,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
-            return null
+            return@run null
         }
     }
 
@@ -922,7 +922,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
-            return null
+            return@run null
         }
     }
 
@@ -971,8 +971,7 @@ class PhotoGalleryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                     val out = FileOutputStream(path)
                     compressFormat = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         Bitmap.CompressFormat.WEBP_LOSSLESS
-                    }
-                    else {
+                    } else {
                         Bitmap.CompressFormat.WEBP
                     }
                     it.compress(compressFormat, 100, out)
