@@ -617,12 +617,15 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   }
   
   private func extractSizeFromAsset(asset: PHAsset) -> Int64? {
-    let resources = PHAssetResource.assetResources(for: asset)
-    guard let resource = resources.first,
-          let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong else {
-      return nil
+    if #available(iOS 9.0, *) {
+      let resources = PHAssetResource.assetResources(for: asset)
+      if let resource = resources.first{
+        if let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong {
+          return Int64(unsignedInt64)
+        }
+      }
     }
-    return Int64(bitPattern: UInt64(unsignedInt64))
+    return nil;
   }
   
   private func extractTitleFromFilename(filename: String?) -> String? {
