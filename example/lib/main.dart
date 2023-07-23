@@ -229,10 +229,15 @@ class ViewerPage extends StatelessWidget {
         body: Container(
           alignment: Alignment.center,
           child: medium.mediumType == MediumType.image
-              ? FadeInImage(
-                  fit: BoxFit.cover,
-                  placeholder: MemoryImage(kTransparentImage),
-                  image: PhotoProvider(mediumId: medium.id),
+              ? GestureDetector(
+                  onTap: () async {
+                    PhotoGallery.deleteMedium(mediumId: medium.id);
+                  },
+                  child: FadeInImage(
+                    fit: BoxFit.cover,
+                    placeholder: MemoryImage(kTransparentImage),
+                    image: PhotoProvider(mediumId: medium.id),
+                  ),
                 )
               : VideoProvider(
                   mediumId: medium.id,
