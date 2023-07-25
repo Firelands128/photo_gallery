@@ -84,7 +84,7 @@ class PhotoGallery {
   }
 
   /// Get album thumbnail by album id
-  static Future<List<int>?> getAlbumThumbnail({
+  static Future<List<int>> getAlbumThumbnail({
     required String albumId,
     MediumType? mediumType,
     bool newest = true,
@@ -100,7 +100,8 @@ class PhotoGallery {
       'height': height,
       'highQuality': highQuality,
     });
-    return bytes != null ? new List<int>.from(bytes) : null;
+    if (bytes == null) throw "Failed to fetch thumbnail of album $albumId";
+    return new List<int>.from(bytes);
   }
 
   /// get medium file by medium id

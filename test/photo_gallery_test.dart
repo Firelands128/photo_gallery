@@ -74,7 +74,7 @@ void main() {
 
   test('get album thumbnail', () async {
     String albumId = "__ALL__";
-    List? result = await PhotoGallery.getAlbumThumbnail(albumId: albumId);
+    List result = await PhotoGallery.getAlbumThumbnail(albumId: albumId);
     List expected = Generator.generateMockAlbumThumbnail(albumId: albumId);
     expect(result, expected);
   });

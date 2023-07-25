@@ -27,18 +27,18 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
 
   Future<ui.Codec> _loadAsync(AlbumThumbnailProvider key, ImageDecoderCallback decode) async {
     assert(key == this);
-    final data = await PhotoGallery.getAlbumThumbnail(
-      albumId: album.id,
-      mediumType: album.mediumType,
-      newest: album.newest,
-      height: height,
-      width: width,
-      highQuality: highQuality,
-    );
-    ui.ImmutableBuffer buffer;
-    if (data != null) {
+    late ui.ImmutableBuffer buffer;
+    try {
+      final data = await PhotoGallery.getAlbumThumbnail(
+        albumId: album.id,
+        mediumType: album.mediumType,
+        newest: album.newest,
+        height: height,
+        width: width,
+        highQuality: highQuality,
+      );
       buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
-    } else {
+    } catch (e) {
       buffer = await ui.ImmutableBuffer.fromAsset("packages/photo_gallery/images/grey.bmp");
     }
     return decode(buffer);
