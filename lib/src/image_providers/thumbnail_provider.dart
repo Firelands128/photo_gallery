@@ -29,14 +29,19 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
 
   Future<ui.Codec> _loadAsync(ThumbnailProvider key, ImageDecoderCallback decode) async {
     assert(key == this);
-    final data = await PhotoGallery.getThumbnail(
-      mediumId: mediumId,
-      mediumType: mediumType,
-      height: height,
-      width: width,
-      highQuality: highQuality,
-    );
-    ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
+    late ui.ImmutableBuffer buffer;
+    try {
+      final data = await PhotoGallery.getThumbnail(
+        mediumId: mediumId,
+        mediumType: mediumType,
+        height: height,
+        width: width,
+        highQuality: highQuality,
+      );
+      buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
+    } catch (e) {
+      buffer = await ui.ImmutableBuffer.fromAsset("packages/photo_gallery/images/grey.bmp");
+    }
     return decode(buffer);
   }
 
