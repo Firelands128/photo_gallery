@@ -228,12 +228,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
     } else {
       let asset: PHAsset = assets[0]
-      getMediumFromAssetAsync(
-        asset: asset,
-        completion: { (data: [String: Any?]?, error: Error?) -> Void in
-          completion(data, nil)
-        }
-      )
+      completion(getMediumFromAsset(asset: asset), nil)
     }
   }
   
@@ -436,6 +431,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let resource = self.extractResourceFromAsset(asset: asset)
     let size = self.extractSizeFromResource(resource: resource)
+    let orientation = self.toOrientationValue(orientation: asset.value(forKey: "orientation") as? UIImage.Orientation)
     return [
       "id": asset.localIdentifier,
       "filename": filename,
@@ -445,6 +441,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "height": asset.pixelHeight,
       "width": asset.pixelWidth,
       "size": size,
+      "orientation": orientation,
       "duration": NSInteger(asset.duration * 1000),
       "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
@@ -461,34 +458,6 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
       "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
     ]
-  }
-  
-  private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
-    let filename = self.extractFilenameFromAsset(asset: asset)
-    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
-    let resource = self.extractResourceFromAsset(asset: asset)
-    let size = self.extractSizeFromResource(resource: resource)
-    let manager = PHImageManager.default()
-    manager.requestImageData(
-      for: asset,
-      options: nil,
-      resultHandler: { (data: Data?, uti: String?, orientation: UIImage.Orientation, info: ([AnyHashable: Any]?)) -> Void in
-        completion([
-          "id": asset.localIdentifier,
-          "filename": filename,
-          "title": self.extractTitleFromFilename(filename: filename),
-          "mediumType": self.toDartMediumType(value: asset.mediaType),
-          "mimeType": mimeType,
-          "height": asset.pixelHeight,
-          "width": asset.pixelWidth,
-          "size": size,
-          "orientation": self.toOrientationValue(orientation: orientation),
-          "duration": NSInteger(asset.duration * 1000),
-          "creationDate": (asset.creationDate != nil) ? NSInteger(asset.creationDate!.timeIntervalSince1970 * 1000) : nil,
-          "modifiedDate": (asset.modificationDate != nil) ? NSInteger(asset.modificationDate!.timeIntervalSince1970 * 1000) : nil
-        ], nil)
-      }
-    )
   }
   
   private func exportPathForAsset(asset: PHAsset, ext: String) -> URL {
@@ -517,26 +486,29 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     }
   }
   
-  private func toOrientationValue(orientation: UIImage.Orientation) -> Int {
-    switch orientation {
-    case UIImage.Orientation.up:
-      return 1
-    case UIImage.Orientation.down:
-      return 3
-    case UIImage.Orientation.left:
-      return 6
-    case UIImage.Orientation.right:
-      return 8
-    case UIImage.Orientation.upMirrored:
-      return 2
-    case UIImage.Orientation.downMirrored:
-      return 4
-    case UIImage.Orientation.leftMirrored:
-      return 5
-    case UIImage.Orientation.rightMirrored:
-      return 7
-    @unknown default:
+  private func toOrientationValue(orientation: UIImage.Orientation?) -> Int {
+    guard let orientation = orientation else {
       return 0
+    }
+    switch orientation {
+      case UIImage.Orientation.up:
+        return 1
+      case UIImage.Orientation.down:
+        return 3
+      case UIImage.Orientation.left:
+        return 6
+      case UIImage.Orientation.right:
+        return 8
+      case UIImage.Orientation.upMirrored:
+        return 2
+      case UIImage.Orientation.downMirrored:
+        return 4
+      case UIImage.Orientation.leftMirrored:
+        return 5
+      case UIImage.Orientation.rightMirrored:
+        return 7
+      @unknown default:
+        return 0
     }
   }
   
