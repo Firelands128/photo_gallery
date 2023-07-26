@@ -432,9 +432,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   }
   
   private func getMediumFromAsset(asset: PHAsset) -> [String: Any?] {
-    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
-    let size = self.extractSizeFromAsset(asset: asset)
+    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
+    let resource = self.extractResourceFromAsset(asset: asset)
+    let size = self.extractSizeFromResource(resource: resource)
     return [
       "id": asset.localIdentifier,
       "filename": filename,
@@ -463,9 +464,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
   }
   
   private func getMediumFromAssetAsync(asset: PHAsset, completion: @escaping ([String : Any?]?, Error?) -> Void) -> Void {
-    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
     let filename = self.extractFilenameFromAsset(asset: asset)
-    let size = self.extractSizeFromAsset(asset: asset)
+    let mimeType = self.extractMimeTypeFromAsset(asset: asset)
+    let resource = self.extractResourceFromAsset(asset: asset)
+    let size = self.extractSizeFromResource(resource: resource)
     let manager = PHImageManager.default()
     manager.requestImageData(
       for: asset,
@@ -568,51 +570,40 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     return mimeType
   }
   
-  private func extractUTIFromAsset(asset: PHAsset) -> String? {
-    if #available(iOS 9, *) {
-      let resourceList = PHAssetResource.assetResources(for: asset)
-      if let resource = resourceList.first {
-        return resource.uniformTypeIdentifier
-      }
-    }
-    return asset.value(forKey: "uniformTypeIdentifier") as? String
-  }
-  
   private func extractFileExtensionFromAsset(asset: PHAsset) -> String {
-    let uti = self.extractUTIFromAsset(asset: asset)
+    let uti = asset.value(forKey: "uniformTypeIdentifier") as? String
     return self.extractFileExtensionFromUTI(uti: uti)
   }
   
   private func extractMimeTypeFromAsset(asset: PHAsset) -> String? {
-    let uti = self.extractUTIFromAsset(asset: asset)
+    let uti = asset.value(forKey: "uniformTypeIdentifier") as? String
     return self.extractMimeTypeFromUTI(uti: uti)
   }
   
   private func extractFilenameFromAsset(asset: PHAsset) -> String? {
-    if #available(iOS 9.0, *) {
-      let resources = PHAssetResource.assetResources(for: asset)
-      if let resource = resources.first {
-        return resource.originalFilename
-      }
-    }
-    return asset.value(forKey: "filename") as? String
-  }
-  
-  private func extractSizeFromAsset(asset: PHAsset) -> Int64? {
-    if #available(iOS 9.0, *) {
-      let resources = PHAssetResource.assetResources(for: asset)
-      if let resource = resources.first{
-        if let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong {
-          return Int64(unsignedInt64)
-        }
-      }
-    }
-    return nil;
+    return asset.value(forKey: "originalFilename") as? String
   }
   
   private func extractTitleFromFilename(filename: String?) -> String? {
     if let name = filename {
       return (name as NSString).deletingPathExtension
+    }
+    return nil
+  }
+
+  private func extractResourceFromAsset(asset: PHAsset) -> PHAssetResource? {
+    if #available(iOS 9, *) {
+      let resourceList = PHAssetResource.assetResources(for: asset)
+      if let resource = resourceList.first {
+        return resource
+      }
+    }
+    return nil
+  }
+  
+  private func extractSizeFromResource(resource: PHAssetResource?) -> Int64? {
+    if let assetResource = resource {
+      return assetResource.value(forKey: "fileSize") as? Int64
     }
     return nil
   }
