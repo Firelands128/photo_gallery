@@ -1,3 +1,17 @@
+## 2.1.0
+
+Add deleting medium functionality.
+
+Add light weight option of listing media.
+
+Catch exception of getting medium thumbnail failed then show default image.
+
+Add requestLegacyExternalStorage flag back to be compatible with Android 10.
+
+Use photos permission for iOS14+.
+
+Improve performance of getting medium full information on iOS platform.
+
 ## 2.0.2
 
 Add some default value of models' property.
