@@ -31,12 +31,12 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     else if(call.method == "getMedium") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
       let mediumId = arguments["mediumId"] as! String
-      getMedium(
-        mediumId: mediumId,
-        completion: { (data: [String: Any?]?, error: Error?) -> Void in
-          result(data)
-        }
-      )
+      do {
+        let medium = try getMedium(mediumId: mediumId)
+        result(medium)
+      } catch {
+        result(nil)
+      }
     }
     else if(call.method == "getThumbnail") {
       let arguments = call.arguments as! Dictionary<String, AnyObject>
@@ -217,7 +217,7 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     ]
   }
   
-  private func getMedium(mediumId: String, completion: @escaping ([String : Any?]?, Error?) -> Void) {
+  private func getMedium(mediumId: String) throws -> [String: Any?] {
     let fetchOptions = PHFetchOptions()
     if #available(iOS 9, *) {
       fetchOptions.fetchLimit = 1
@@ -225,10 +225,10 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
     let assets: PHFetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [mediumId], options: fetchOptions)
     
     if (assets.count <= 0) {
-      completion(nil, NSError(domain: "photo_gallery", code: 404, userInfo: nil))
+      throw NSError(domain: "photo_gallery", code: 404)
     } else {
       let asset: PHAsset = assets[0]
-      completion(getMediumFromAsset(asset: asset), nil)
+      return getMediumFromAsset(asset: asset)
     }
   }
   
