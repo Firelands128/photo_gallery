@@ -2,12 +2,16 @@ part of photogallery;
 
 /// Fetches the given image from the gallery.
 class PhotoProvider extends ImageProvider<PhotoProvider> {
+  /// ImageProvider of photo
   PhotoProvider({
     required this.mediumId,
     this.mimeType,
   });
 
+  /// Medium id
   final String mediumId;
+
+  /// Mime type
   final String? mimeType;
 
   @override

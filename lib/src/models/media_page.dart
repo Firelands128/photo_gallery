@@ -3,6 +3,7 @@ part of photogallery;
 /// A list of media with pagination support.
 @immutable
 class MediaPage {
+  /// The album that belongs to
   final Album album;
 
   /// The start offset for those media.
@@ -11,6 +12,7 @@ class MediaPage {
   /// The current items.
   final List<Medium> items;
 
+  /// Whether using light weight option
   final bool? lightWeight;
 
   /// The end index in the album.

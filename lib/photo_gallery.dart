@@ -130,6 +130,7 @@ class PhotoGallery {
     });
   }
 
+  /// Clean medium file cache
   static Future<void> cleanCache() async {
     _channel.invokeMethod('cleanCache', {});
   }

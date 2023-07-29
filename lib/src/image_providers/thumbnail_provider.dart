@@ -2,6 +2,7 @@ part of photogallery;
 
 /// Fetches the given medium thumbnail from the gallery.
 class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
+  /// ImageProvider of medium thumbnail
   const ThumbnailProvider({
     required this.mediumId,
     this.mediumType,
@@ -10,10 +11,19 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
     this.highQuality = false,
   });
 
+  /// Medium id
   final String mediumId;
+
+  /// Medium type
   final MediumType? mediumType;
+
+  /// Height of medium thumbnail
   final int? height;
+
+  /// Width of medium thumbnail
   final int? width;
+
+  /// Whether using high quality of medium thumbnail
   final bool? highQuality;
 
   @override

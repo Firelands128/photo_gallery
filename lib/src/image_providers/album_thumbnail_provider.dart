@@ -2,6 +2,7 @@ part of photogallery;
 
 /// Fetches the given album thumbnail from the gallery.
 class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
+  /// ImageProvider of album thumbnail
   const AlbumThumbnailProvider({
     required this.album,
     this.height,
@@ -9,9 +10,16 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
     this.highQuality = false,
   });
 
+  /// Album info
   final Album album;
+
+  /// Height of album thumbnail
   final int? height;
+
+  /// Width of album thumbnail
   final int? width;
+
+  /// Whether using high quality of album thumbnail
   final bool? highQuality;
 
   @override
