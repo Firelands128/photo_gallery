@@ -41,21 +41,6 @@ class Medium {
   /// The date at which the photo or video was modified.
   final DateTime? modifiedDate;
 
-  Medium({
-    required this.id,
-    this.filename,
-    this.title,
-    this.mediumType,
-    this.width,
-    this.height,
-    this.size,
-    this.orientation,
-    this.mimeType,
-    this.duration = 0,
-    this.creationDate,
-    this.modifiedDate,
-  });
-
   /// Creates a medium from platform channel protocol.
   Medium.fromJson(dynamic json)
       : id = json["id"],
@@ -74,36 +59,6 @@ class Medium {
         modifiedDate = json['modifiedDate'] != null
             ? DateTime.fromMillisecondsSinceEpoch(json['modifiedDate'])
             : null;
-
-  static Medium fromMap(Map map) {
-    return Medium(
-      id: map['id'],
-      filename: map['filename'],
-      title: map['title'],
-      mediumType: jsonToMediumType(map['mediumType']),
-      width: map['width'],
-      height: map['height'],
-      orientation: map['orientation'],
-      mimeType: map["mimeType"],
-      creationDate: map['creationDate'],
-      modifiedDate: map['modifiedDate'],
-    );
-  }
-
-  Map toMap() {
-    return {
-      "id": this.id,
-      "filename": this.filename,
-      "title": this.title,
-      "mediumType": mediumTypeToJson(this.mediumType),
-      "height": this.height,
-      "orientation": this.orientation,
-      "mimeType": this.mimeType,
-      "width": this.width,
-      "creationDate": this.creationDate,
-      "modifiedDate": this.modifiedDate,
-    };
-  }
 
   /// Get a JPEG thumbnail's data for this medium.
   Future<List<int>> getThumbnail({
