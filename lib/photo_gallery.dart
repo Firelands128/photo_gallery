@@ -18,7 +18,7 @@ part 'src/models/medium.dart';
 
 /// Accessing the native photo gallery.
 class PhotoGallery {
-  static const MethodChannel _channel = const MethodChannel('photo_gallery');
+  static const MethodChannel _channel = MethodChannel('photo_gallery');
 
   /// List all available gallery albums and counts number of items of [MediumType].
   static Future<List<Album>> listAlbums({
@@ -80,7 +80,7 @@ class PhotoGallery {
       'highQuality': highQuality,
     });
     if (bytes == null) throw "Failed to fetch thumbnail of medium $mediumId";
-    return new List<int>.from(bytes);
+    return List<int>.from(bytes);
   }
 
   /// Get album thumbnail by album id
@@ -101,7 +101,7 @@ class PhotoGallery {
       'highQuality': highQuality,
     });
     if (bytes == null) throw "Failed to fetch thumbnail of album $albumId";
-    return new List<int>.from(bytes);
+    return List<int>.from(bytes);
   }
 
   /// get medium file by medium id

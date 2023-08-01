@@ -56,7 +56,7 @@ class Album {
   }) {
     return PhotoGallery.getAlbumThumbnail(
       albumId: id,
-      mediumType: this.mediumType,
+      mediumType: mediumType,
       width: width,
       height: height,
       highQuality: highQuality,
