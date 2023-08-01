@@ -1,3 +1,11 @@
+## 2.1.1
+
+Update flutter SDK constraints in pubspec.yaml.
+
+Use flutter_lints to lint code.
+
+Add dartdoc comments for public APIs.
+
 ## 2.1.0
 
 Add deleting medium functionality.
