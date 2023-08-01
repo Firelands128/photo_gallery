@@ -22,10 +22,8 @@ class Album {
   bool get isAllAlbum => id == "__ALL__";
 
   /// Creates a album from platform channel protocol.
-  Album.fromJson(dynamic json, MediumType? mediumType, bool newest)
+  Album.fromJson(dynamic json, this.mediumType, this.newest)
       : id = json['id'],
-        mediumType = mediumType,
-        newest = newest,
         name = json['name'],
         count = json['count'] ?? 0;
 
