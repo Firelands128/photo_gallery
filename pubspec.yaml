@@ -4,7 +4,7 @@ version: 2.1.1
 repository: https://github.com/Firelands128/photo_gallery
 
 environment:
-  sdk: ">=2.12.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=3.10.0"
 
 dependencies:
