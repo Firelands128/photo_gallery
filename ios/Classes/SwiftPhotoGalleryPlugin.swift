@@ -326,14 +326,19 @@ public class SwiftPhotoGalleryPlugin: NSObject, FlutterPlugin {
       fetchOptions.fetchLimit = 1
     }
 
-    let assets: PHFetchResult<PHAsset>
-    if(albumId == "__ALL__") {
-      assets = PHAsset.fetchAssets(with: fetchOptions)
-    } else {
-      assets = PHAsset.fetchAssets(in: self.assetCollections.first(where: { (collection) -> Bool in
-        collection.localIdentifier == albumId
-      })!, options: fetchOptions)
-    }
+   var assets: PHFetchResult<PHAsset>
+
+   if albumId == "__ALL__" {
+       assets = PHAsset.fetchAssets(with: fetchOptions)
+   } else if let collection = self.assetCollections.first(where: { $0.localIdentifier == albumId }) {
+       assets = PHAsset.fetchAssets(in: collection, options: fetchOptions)
+   } else {
+       // Handle the case where the collection is nil
+       print("Error: Collection with ID \(albumId) not found")
+       // You might want to provide a default value or handle this case according to your app's logic
+       // For now, let's just assign an empty fetch result
+       assets = PHAsset.fetchAssets(with: fetchOptions)
+   }
 
     if (assets.count > 0) {
       let asset: PHAsset = assets[0]
