@@ -6,12 +6,13 @@ PODS:
     - Flutter
   - video_player_avfoundation (0.0.1):
     - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - photo_gallery (from `.symlinks/plugins/photo_gallery/ios`)
-  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -21,14 +22,14 @@ EXTERNAL SOURCES:
   photo_gallery:
     :path: ".symlinks/plugins/photo_gallery/ios"
   video_player_avfoundation:
-    :path: ".symlinks/plugins/video_player_avfoundation/ios"
+    :path: ".symlinks/plugins/video_player_avfoundation/darwin"
 
 SPEC CHECKSUMS:
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   photo_gallery: 9f95e57747cd22c10676ece3660d1ffe6c603ee5
-  video_player_avfoundation: 81e49bb3d9fb63dccf9fa0f6d877dc3ddbeac126
+  video_player_avfoundation: 02011213dab73ae3687df27ce441fbbcc82b5579
 
-PODFILE CHECKSUM: 34ee0d615c11cc61efba04f55f35440fbdc98127
+PODFILE CHECKSUM: ddf3ec08e071482cd695bf939d669403d322b6c1
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.15.2
