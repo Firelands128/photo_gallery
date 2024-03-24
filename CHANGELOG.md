@@ -1,3 +1,9 @@
+# 2.2.1
+
+Upgrade ```flutter_lints``` dependency, and then lint code according to the ```public_member_api_docs``` and ```use_string_in_part_of_directives``` rule.
+
+Make ```AlbumPageState``` widget private.
+
 ## 2.2.0
 
 Add GitHub Actions configuration to automatically publish to ```pub.dev``` from ```Github```.
