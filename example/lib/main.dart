@@ -11,6 +11,7 @@ void main() {
   runApp(MyApp());
 }
 
+/// The main widget of example app
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
@@ -142,16 +143,19 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+/// The album page widget
 class AlbumPage extends StatefulWidget {
+  /// Album object to show in the page
   final Album album;
 
+  /// The constructor of AlbumPage
   AlbumPage(Album album) : album = album;
 
   @override
-  State<StatefulWidget> createState() => AlbumPageState();
+  State<StatefulWidget> createState() => _AlbumPageState();
 }
 
-class AlbumPageState extends State<AlbumPage> {
+class _AlbumPageState extends State<AlbumPage> {
   List<Medium>? _media;
 
   @override
@@ -209,9 +213,12 @@ class AlbumPageState extends State<AlbumPage> {
   }
 }
 
+/// The viewer page widget
 class ViewerPage extends StatelessWidget {
+  /// The medium object to show in the page
   final Medium medium;
 
+  /// The constructor of ViewerPage
   ViewerPage(Medium medium) : medium = medium;
 
   @override
@@ -248,9 +255,12 @@ class ViewerPage extends StatelessWidget {
   }
 }
 
+/// The video provider widget
 class VideoProvider extends StatefulWidget {
+  /// The identifier of medium
   final String mediumId;
 
+  /// The constructor of VideoProvider
   const VideoProvider({
     required this.mediumId,
   });
