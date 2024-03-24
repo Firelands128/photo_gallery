@@ -1,3 +1,13 @@
+## 2.2.0
+
+Add GitHub Actions configuration to automatically publish to ```pub.dev``` from ```Github```.
+
+Add dart-doc on ```PhotoGallery``` APIs.
+
+Fix bugs.
+
+Upgrade versions.
+
 ## 2.1.1
 
 Update flutter SDK constraints in pubspec.yaml.
