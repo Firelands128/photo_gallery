@@ -1,0 +1,37 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    environment: pub.dev
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # This action adds a token needed for pub.dev
+      - name: Install Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      # Install Flutter
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      # Minimal package setup and dry run checks.
+      - name: Install dependencies
+        run: flutter pub get
+      # Publish package with dry run
+      - name: Publish dry run
+        run: flutter pub publish --dry-run
+      # Publishing...
+      - name: Publish to pub.dev
+        run: flutter pub publish -f
