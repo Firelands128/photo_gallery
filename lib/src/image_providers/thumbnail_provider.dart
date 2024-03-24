@@ -1,4 +1,4 @@
-part of photogallery;
+part of '../../photo_gallery.dart';
 
 /// Fetches the given medium thumbnail from the gallery.
 class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {

@@ -1,4 +1,4 @@
-part of photogallery;
+part of '../../photo_gallery.dart';
 
 /// A medium in the gallery.
 ///

@@ -1,4 +1,4 @@
-part of photogallery;
+part of '../../photo_gallery.dart';
 
 /// Fetches the given image from the gallery.
 class PhotoProvider extends ImageProvider<PhotoProvider> {
