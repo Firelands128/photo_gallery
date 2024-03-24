@@ -58,9 +58,9 @@ class AlbumThumbnailProvider extends ImageProvider<AlbumThumbnailProvider> {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType) return false;
-    final AlbumThumbnailProvider typedOther = other;
+    final typedOther = other as AlbumThumbnailProvider;
     return album.id == typedOther.album.id;
   }
 

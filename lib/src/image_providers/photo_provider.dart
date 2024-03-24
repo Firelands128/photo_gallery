@@ -39,9 +39,9 @@ class PhotoProvider extends ImageProvider<PhotoProvider> {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType) return false;
-    final PhotoProvider typedOther = other;
+    final typedOther = other as PhotoProvider;
     return mediumId == typedOther.mediumId;
   }
 

@@ -61,9 +61,9 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (other.runtimeType != runtimeType) return false;
-    final ThumbnailProvider typedOther = other;
+    final typedOther = other as ThumbnailProvider;
     return mediumId == typedOther.mediumId;
   }
 
