@@ -21,6 +21,9 @@ class PhotoGallery {
   static const MethodChannel _channel = MethodChannel('photo_gallery');
 
   /// List all available gallery albums and counts number of items of [MediumType].
+  /// mediumType: medium type of albums
+  /// newest: whether to sort media by latest date in albums
+  /// hideIfEmpty: whether to hide empty albums, only available on iOS
   static Future<List<Album>> listAlbums({
     MediumType? mediumType,
     bool newest = true,
@@ -28,13 +31,16 @@ class PhotoGallery {
   }) async {
     final json = await _channel.invokeMethod('listAlbums', {
       'mediumType': mediumTypeToJson(mediumType),
-      'newest': newest,
       'hideIfEmpty': hideIfEmpty,
     });
     return json.map<Album>((album) => Album.fromJson(album, mediumType, newest)).toList();
   }
 
   /// List all available media in a specific album, support pagination of media
+  /// album: the album to list media
+  /// skip: the number to skip when list media
+  /// take: the number to return when list media
+  /// lightWeight: whether to return brief information when list media
   static Future<MediaPage> _listMedia({
     required Album album,
     int? skip,
@@ -53,6 +59,8 @@ class PhotoGallery {
   }
 
   /// Get medium metadata by medium id
+  /// mediumId: the identifier of medium
+  /// mediumType: the type of medium
   static Future<Medium> getMedium({
     required String mediumId,
     MediumType? mediumType,
@@ -65,6 +73,10 @@ class PhotoGallery {
   }
 
   /// Get medium thumbnail by medium id
+  /// mediumId: the identifier of medium
+  /// width: the width of medium
+  /// height: the height of medium
+  /// heightQuality: whether to use high quality of medium thumbnail
   static Future<List<int>> getThumbnail({
     required String mediumId,
     MediumType? mediumType,
@@ -84,6 +96,11 @@ class PhotoGallery {
   }
 
   /// Get album thumbnail by album id
+  /// mediumType: the type of medium
+  /// newest: whether to get the newest medium or oldest medium as album thumbnail
+  /// width: the width of thumbnail
+  /// height: the height of thumbnail
+  /// highQuality: whether to use high quality of album thumbnail
   static Future<List<int>> getAlbumThumbnail({
     required String albumId,
     MediumType? mediumType,
@@ -105,6 +122,8 @@ class PhotoGallery {
   }
 
   /// get medium file by medium id
+  /// mediumType: the type of medium
+  /// mimeType: the mime type of medium
   static Future<File> getFile({
     required String mediumId,
     MediumType? mediumType,
@@ -120,6 +139,8 @@ class PhotoGallery {
   }
 
   /// Delete medium by medium id
+  /// mediumId: the identifier of medium
+  /// mediumType: the type of medium
   static Future<void> deleteMedium({
     required String mediumId,
     MediumType? mediumType,
