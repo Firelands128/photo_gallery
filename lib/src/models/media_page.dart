@@ -33,7 +33,7 @@ class MediaPage {
       album: album,
       skip: end,
       take: items.length,
-      lightWeight: lightWeight
+      lightWeight: lightWeight,
     );
   }
 

@@ -43,7 +43,8 @@ class _MyAppState extends State<MyApp> {
 
   Future<bool> _promptPermissionSetting() async {
     if (Platform.isIOS) {
-      if (await Permission.photos.request().isGranted || await Permission.storage.request().isGranted) {
+      if (await Permission.photos.request().isGranted ||
+          await Permission.storage.request().isGranted) {
         return true;
       }
     }
@@ -84,7 +85,9 @@ class _MyAppState extends State<MyApp> {
                         ...?_albums?.map(
                           (album) => GestureDetector(
                             onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => AlbumPage(album)),
+                              MaterialPageRoute(
+                                builder: (context) => AlbumPage(album),
+                              ),
                             ),
                             child: Column(
                               children: <Widget>[
@@ -96,7 +99,8 @@ class _MyAppState extends State<MyApp> {
                                     width: gridWidth,
                                     child: FadeInImage(
                                       fit: BoxFit.cover,
-                                      placeholder: MemoryImage(kTransparentImage),
+                                      placeholder:
+                                          MemoryImage(kTransparentImage),
                                       image: AlbumThumbnailProvider(
                                         album: album,
                                         highQuality: true,
@@ -308,7 +312,9 @@ class _VideoProviderState extends State<VideoProvider> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    _controller!.value.isPlaying ? _controller!.pause() : _controller!.play();
+                    _controller!.value.isPlaying
+                        ? _controller!.pause()
+                        : _controller!.play();
                   });
                 },
                 child: Icon(

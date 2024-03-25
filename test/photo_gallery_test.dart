@@ -13,14 +13,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
       channel,
       mockMethodCallHandler,
     );
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
       channel,
       null,
     );
@@ -30,7 +32,10 @@ void main() {
     MediumType mediumType = MediumType.image;
     bool newest = true;
     var result = await PhotoGallery.listAlbums(mediumType: mediumType);
-    var expected = Generator.generateAlbums(mediumType: mediumType, newest: newest);
+    var expected = Generator.generateAlbums(
+      mediumType: mediumType,
+      newest: newest,
+    );
     expect(result, expected);
   });
 

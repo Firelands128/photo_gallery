@@ -8,7 +8,10 @@ Future<dynamic> mockMethodCallHandler(MethodCall call) async {
   if (call.method == "listAlbums") {
     MediumType? mediumType = jsonToMediumType(call.arguments['mediumType']);
     bool newest = call.arguments['newest'];
-    dynamic albums = Generator.generateAlbumsJson(mediumType: mediumType, newest: newest);
+    dynamic albums = Generator.generateAlbumsJson(
+      mediumType: mediumType,
+      newest: newest,
+    );
     return albums;
   } else if (call.method == "listMedia") {
     String albumId = call.arguments['albumId'];

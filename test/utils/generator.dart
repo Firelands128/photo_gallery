@@ -25,7 +25,10 @@ class Generator {
     ];
   }
 
-  static List<Album> generateAlbums({MediumType? mediumType, bool newest = true}) {
+  static List<Album> generateAlbums({
+    MediumType? mediumType,
+    bool newest = true,
+  }) {
     return Generator.generateAlbumsJson(mediumType: mediumType, newest: newest)
         .map<Album>((x) => Album.fromJson(x, mediumType, newest))
         .toList();
@@ -42,7 +45,10 @@ class Generator {
     var items = [];
     int index = skip;
     while (index < skip + take) {
-      items.add(generateMediaJson(mediumId: index.toString(), mediumType: mediumType));
+      items.add(generateMediaJson(
+        mediumId: index.toString(),
+        mediumType: mediumType,
+      ));
       index++;
     }
 

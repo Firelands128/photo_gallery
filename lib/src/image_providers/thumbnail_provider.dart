@@ -37,7 +37,10 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
     );
   }
 
-  Future<ui.Codec> _loadAsync(ThumbnailProvider key, ImageDecoderCallback decode) async {
+  Future<ui.Codec> _loadAsync(
+    ThumbnailProvider key,
+    ImageDecoderCallback decode,
+  ) async {
     assert(key == this);
     late ui.ImmutableBuffer buffer;
     try {
@@ -50,7 +53,9 @@ class ThumbnailProvider extends ImageProvider<ThumbnailProvider> {
       );
       buffer = await ui.ImmutableBuffer.fromUint8List(Uint8List.fromList(data));
     } catch (e) {
-      buffer = await ui.ImmutableBuffer.fromAsset("packages/photo_gallery/images/grey.bmp");
+      buffer = await ui.ImmutableBuffer.fromAsset(
+        "packages/photo_gallery/images/grey.bmp",
+      );
     }
     return decode(buffer);
   }

@@ -33,7 +33,9 @@ class PhotoGallery {
       'mediumType': mediumTypeToJson(mediumType),
       'hideIfEmpty': hideIfEmpty,
     });
-    return json.map<Album>((album) => Album.fromJson(album, mediumType, newest)).toList();
+    return json
+        .map<Album>((album) => Album.fromJson(album, mediumType, newest))
+        .toList();
   }
 
   /// List all available media in a specific album, support pagination of media
